@@ -18,19 +18,13 @@
           textmuted: { light: '#5b677a', dark: '#a8b3c1' },
           brand: { light: '#0ea5a6', dark: '#22d3ee' }
         },
-        boxShadow: {
-          soft: '0 6px 24px rgba(0,0,0,.10)',
-          glass: '0 16px 40px rgba(0,0,0,.25)'
-        },
+        boxShadow: { soft: '0 6px 24px rgba(0,0,0,.10)', glass: '0 16px 40px rgba(0,0,0,.25)' },
         borderRadius: { xl2: '1.1rem' },
         keyframes: {
           fadeSlide: { '0%': { opacity: 0, transform: 'translateY(8px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
           pop: { '0%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.03)' }, '100%': { transform: 'scale(1)' } }
         },
-        animation: {
-          fadeSlide: 'fadeSlide .35s ease both',
-          pop: 'pop .18s ease-out'
-        }
+        animation: { fadeSlide: 'fadeSlide .35s ease both', pop: 'pop .18s ease-out' }
       }
     }
   }
@@ -76,16 +70,10 @@
       <h2 class="m-0 px-4 py-3 text-sm text-textmuted-light bg-surface-light border-b border-edge-light dark:text-textmuted-dark dark:bg-surface-dark dark:border-edge-dark">How to use</h2>
       <div class="p-4">
         <ol class="list-decimal pl-5 grid gap-2 text-[15px]">
-          <li>Paste your event JSON below and press JSON Breakdown or use Ctrl/⌘+Enter.</li>
-          <li>Open “Pick a field”, browse the Tree and click a key to select it. Use → to expand, ← to collapse, ↑/↓ to move, Enter/Space to toggle.</li>
-          <li>Use Quick search to jump directly to fields.</li>
-          <li>Choose a tag prefix and optional fallback. The Omnisend tag updates instantly.</li>
-          <li>Copy the Omnisend tag, Dynamic alias, or the Preview value.</li>
+          <li>Paste your event JSON and press JSON Breakdown or use Ctrl/⌘+Enter.</li>
+          <li>Select a field in the Tree or search by key or value below.</li>
+          <li> Check or Copy the Omnisend tag or preview value.</li>
         </ol>
-        <div class="mt-3 space-y-2 text-[13px] text-textmuted-light dark:text-textmuted-dark">
-          <p>Shopify-style payloads often store properties under <code class="text-emerald-700 dark:text-emerald-300">raw</code> (for example <code class="text-emerald-700 dark:text-emerald-300">event.raw.shipping_address.city</code>).</p>
-          <p>Arrays like <code class="text-emerald-700 dark:text-emerald-300">line_items</code> can be indexed (for example <code class="text-emerald-700 dark:text-emerald-300">[0]</code>)</p>
-        </div>
       </div>
     </section>
 
@@ -112,35 +100,12 @@
     <section class="lg:col-span-2 rounded-2xl border border-edge-light bg-card-light shadow-soft dark:border-edge-dark dark:bg-card-dark animate-fadeSlide">
       <h2 class="m-0 px-4 py-3 text-sm text-textmuted-light bg-surface-light border-b border-edge-light dark:text-textmuted-dark dark:bg-surface-dark dark:border-edge-dark">2) Pick a field → get the tag</h2>
 
-      <div class="p-4 grid gap-4 lg:grid-cols-[minmax(260px,360px)_1fr] items-start">
-        <div>
-          <label for="searchBox" class="block text-sm text-textmuted-light dark:text-textmuted-dark mb-2">Quick search</label>
-          <div class="grid grid-cols-[1fr_auto] gap-2">
-            <input id="searchBox" type="search" placeholder="Search keys (e.g., line_items, email, city)" aria-controls="results" class="rounded-xl border border-edge-light bg-surface-light px-3.5 py-2.5 text-sm placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-surface-dark transition"/>
-            <button id="expandAll" type="button" title="Expand all nodes" class="rounded-xl border border-edge-light bg-card-light px-3 py-2.5 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition">Expand all</button>
-          </div>
-          <div id="results" role="listbox" aria-label="Search results" class="mt-2 max-h-64 overflow-auto rounded-xl border border-edge-light bg-surface-light p-2 dark:border-edge-dark dark:bg-surface-dark"></div>
-        </div>
-
-        <div>
-          <label for="tree" class="block text-sm text-textmuted-light dark:text-textmuted-dark mb-2">Tree</label>
-          <div id="tree" role="tree" aria-label="JSON tree" class="tree rounded-xl border border-edge-light bg-surface-light p-2 dark:border-edge-dark dark:bg-surface-dark"></div>
-        </div>
-      </div>
-
-      <div class="p-4 border-t border-edge-light dark:border-edge-dark">
-        <div id="out" style="display:none;" class="grid gap-4 md:grid-cols-2">
+      <div class="p-4">
+        <div id="out" style="display:none;" class="grid gap-4 md:grid-cols-2 mb-6">
           <div class="space-y-1 animate-fadeSlide">
             <div class="text-sm text-textmuted-light dark:text-textmuted-dark">Omnisend tag</div>
             <div id="tag" role="textbox" aria-readonly="true" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2 font-mono text-sm break-words dark:border-edge-dark dark:bg-surface-dark"></div>
             <button class="copy mt-1 rounded-xl border border-edge-light bg-card-light px-3 py-2 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" data-copy="tag" type="button" aria-label="Copy Omnisend tag">Copy tag</button>
-          </div>
-
-          <div id="dynBox" style="display:none;" class="space-y-1 animate-fadeSlide">
-            <div class="text-sm text-textmuted-light dark:text-textmuted-dark">Dynamic Layout suggestion (list alias)</div>
-            <div id="dynTag" role="textbox" aria-readonly="true" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2 font-mono text-sm break-words dark:border-edge-dark dark:bg-surface-dark"></div>
-            <button class="copy mt-1 rounded-xl border border-edge-light bg-card-light px-3 py-2 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" data-copy="dynTag" type="button" aria-label="Copy alias tag">Copy alias tag</button>
-            <div class="text-[13px] text-textmuted-light dark:text-textmuted-dark">Use this inside a Dynamic Content layout whose data source is the list (e.g., <code class="text-emerald-700 dark:text-emerald-300">Raw → line_items</code>), where each item is aliased as <code class="text-emerald-700 dark:text-emerald-300">item</code>.</div>
           </div>
 
           <div class="space-y-1 animate-fadeSlide">
@@ -149,11 +114,26 @@
             <button class="copy mt-1 rounded-xl border border-edge-light bg-card-light px-3 py-2 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" data-copy="preview" type="button" aria-label="Copy preview value">Copy value</button>
           </div>
         </div>
+
+        <div class="pt-4 border-t border-edge-light dark:border-edge-dark grid gap-4 lg:grid-cols-[minmax(260px,360px)_1fr] items-start">
+          <div>
+            <label for="searchBox" class="block text-sm text-textmuted-light dark:text-textmuted-dark mb-2">Quick search (keys or values)</label>
+            <div class="grid grid-cols-[1fr_auto] gap-2">
+              <input id="searchBox" type="search" placeholder="Search keys (e.g., line_items, email, city) or values:( Midweight shirt, example@example.com)" aria-controls="results" class="rounded-xl border border-edge-light bg-surface-light px-3.5 py-2.5 text-sm placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-surface-dark transition"/>
+              <button id="expandAll" type="button" title="Expand all nodes" class="rounded-xl border border-edge-light bg-card-light px-3 py-2.5 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition">Expand all</button>
+            </div>
+            <div id="results" role="listbox" aria-label="Search results" class="mt-2 max-h-64 overflow-auto rounded-xl border border-edge-light bg-surface-light p-2 dark:border-edge-dark dark:bg-surface-dark"></div>
+          </div>
+
+          <div>
+            <label for="tree" class="block text-sm text-textmuted-light dark:text-textmuted-dark mb-2">Tree</label>
+            <div id="tree" role="tree" aria-label="JSON tree" class="tree rounded-xl border border-edge-light bg-surface-light p-2 dark:border-edge-dark dark:bg-surface-dark"></div>
+          </div>
+        </div>
       </div>
 
       <div class="px-4 py-3 text-[12px] text-textmuted-light border-t border-edge-light dark:text-textmuted-dark dark:border-edge-dark">
-        Heads-up: Omnisend personalization uses double square brackets (e.g., <code class="text-emerald-700 dark:text-emerald-300">[[ contact.first_name ]]</code>), supports Liquid filters like <code class="text-emerald-700 dark:text-emerald-300">| default:</code> and <code class="text-emerald-700 dark:text-emerald-300">| capitalize</code>, and event properties (often under <code class="text-emerald-700 dark:text-emerald-300">raw</code>) in Automations. See
-        <a class="underline decoration-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition" href="https://support.omnisend.com/en/articles/1061845-personalization-in-channels">Omnisend’s docs</a>.
+        Heads-up: Omnisend personalization uses double square brackets (e.g., <code class="text-emerald-700 dark:text-emerald-300">[[ contact.first_name ]]</code>) and supports Liquid filters like <code class="text-emerald-700 dark:text-emerald-300">| default:</code>.
       </div>
     </section>
   </main>

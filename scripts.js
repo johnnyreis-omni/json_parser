@@ -5,8 +5,6 @@
   const treeEl = document.getElementById('tree');
   const out = document.getElementById('out');
   const tagEl = document.getElementById('tag');
-  const dynBox = document.getElementById('dynBox');
-  const dynTagEl = document.getElementById('dynTag');
   const previewEl = document.getElementById('preview');
   const prefixSelect = document.getElementById('prefixSelect');
   const fallbackInput = document.getElementById('fallbackInput');
@@ -57,7 +55,6 @@
     if (stripLeadingDot && s.startsWith('.')) s = s.slice(1);
     return s;
   }
-  function tokensAfterFirstIndex(tokens) { const i = tokens.findIndex(t => t.t === 'index'); return i === -1 ? null : tokens.slice(i+1); }
   function buildTag(tokens) {
     const prefix = prefixSelect.value.trim();
     const base = tokensToPath(tokens, {stripLeadingDot: true});
@@ -65,15 +62,6 @@
     let core = (prefix ? `${prefix}.` : '') + base;
     let tag = `[[ ${core} ]]`;
     if (fb) tag = `[[ ${core} | default: '${fb.replace(/'/g,"\\'")}' ]]`;
-    return tag;
-  }
-  function buildDynamicAliasTag(tokens) {
-    const after = tokensAfterFirstIndex(tokens);
-    if (!after) return null;
-    const inner = tokensToPath(after, {stripLeadingDot: true});
-    const fb = fallbackInput.value.trim();
-    let tag = `[[ item.${inner} ]]`;
-    if (fb) tag = `[[ item.${inner} | default: '${fb.replace(/'/g,"\\'")}' ]]`;
     return tag;
   }
   function summarize(val) { if (isScalar(val)) return JSON.stringify(val); if (Array.isArray(val)) return `Array(${val.length})`; return `Object(${Object.keys(val).length})`; }
@@ -218,10 +206,6 @@
     out.style.display = 'grid';
     out.classList.add('animate-pop');
     setTimeout(() => out.classList.remove('animate-pop'), 220);
-
-    const dyn = buildDynamicAliasTag(tokens);
-    if (dyn) { dynBox.style.display = ''; dynTagEl.textContent = dyn; }
-    else { dynBox.style.display = 'none'; dynTagEl.textContent = ''; }
   }
 
   function buildTree(data) {
@@ -290,13 +274,21 @@
     const q = searchBox.value.trim().toLowerCase();
     resultsEl.innerHTML = '';
     if (!q || !leafIndex.length) return;
-    const hits = leafIndex.filter(p => p.pathStr.toLowerCase().includes(q)).slice(0, 50);
+    const hits = [];
+    for (const p of leafIndex) {
+      const keyHit = p.pathStr.toLowerCase().includes(q);
+      const valStr = p.sample === null ? 'null' : String(p.sample);
+      const valHit = valStr.toLowerCase().includes(q);
+      if (keyHit || valHit) hits.push({ ...p, keyHit, valStr });
+      if (hits.length >= 100) break;
+    }
     for (const h of hits) {
       const div = document.createElement('div');
-      div.className = 'hit rounded-lg px-2 py-2 text-sm transition hover:bg-sky-500/10 cursor-pointer';
+      div.className = 'hit rounded-lg px-2 py-2 text-sm transition hover:bg-sky-500/10 cursor-pointer flex items-center gap-2';
       div.setAttribute('role','option');
       div.setAttribute('tabindex','0');
-      div.innerHTML = `<span style="font-size:.7rem;color:var(--muted);border:1px solid rgba(148,163,184,.25);border-radius:999px;padding:0 .5rem;margin-right:.35rem">${esc(typeof h.sample)}</span> <code>${esc(h.pathStr)}</code> <span style="font-size:.7rem;color:var(--muted);border:1px solid rgba(148,163,184,.25);border-radius:999px;padding:0 .5rem;margin-left:.35rem">${esc(summarize(h.sample))}</span>`;
+      const badge = h.keyHit ? 'key' : 'value';
+      div.innerHTML = `<span style="font-size:.7rem;color:var(--muted);border:1px solid rgba(148,163,184,.25);border-radius:999px;padding:0 .5rem">${badge}</span><code>${esc(h.pathStr)}</code><span style="font-size:.7rem;color:var(--muted);border:1px solid rgba(148,163,184,.25);border-radius:999px;padding:0 .5rem;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.valStr)}</span>`;
       const choose = () => {
         selectNode(h.pathTokens, h.sample, treeEl.querySelector('li.selected') || document.createElement('li'));
         tagEl.scrollIntoView({behavior:'smooth', block:'center'});
@@ -314,9 +306,6 @@
   [prefixSelect, fallbackInput].forEach(el => el.addEventListener('input', () => {
     if (!lastTokens) return;
     tagEl.textContent = buildTag(lastTokens);
-    const dyn = buildDynamicAliasTag(lastTokens);
-    if (dyn) { dynBox.style.display = ''; dynTagEl.textContent = dyn; }
-    else { dynBox.style.display = 'none'; dynTagEl.textContent = ''; }
   }));
 
   parseBtn.addEventListener('click', tryParse);
