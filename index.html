@@ -4,114 +4,175 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Omnisend Personalization Path Builder</title>
-<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          card: { light: '#ffffff', dark: '#0f1720' },
+          surface: { light: '#f7fafc', dark: '#0b1118' },
+          edge: { light: '#e5e7eb', dark: '#1f2a37' },
+          textpri: { light: '#0f172a', dark: '#e6edf3' },
+          textmuted: { light: '#5b677a', dark: '#a8b3c1' },
+          brand: { light: '#0ea5a6', dark: '#22d3ee' }
+        },
+        boxShadow: {
+          soft: '0 6px 24px rgba(0,0,0,.10)',
+          glass: '0 16px 40px rgba(0,0,0,.25)'
+        },
+        borderRadius: { xl2: '1.1rem' },
+        keyframes: {
+          fadeSlide: { '0%': { opacity: 0, transform: 'translateY(8px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+          pop: { '0%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.03)' }, '100%': { transform: 'scale(1)' } }
+        },
+        animation: {
+          fadeSlide: 'fadeSlide .35s ease both',
+          pop: 'pop .18s ease-out'
+        }
+      }
+    }
+  }
+</script>
+<style>
+  :root { --hover: rgba(14,165,233,.10); --selected: rgba(14,165,233,.18); --muted: #94a3b8; --ok: #16a34a; --bad: #ef4444 }
+  .tree { max-height: min(65vh, 680px); overflow: auto }
+  .tree ul { list-style: none; margin: 0; padding-left: 1rem }
+  .tree li { margin: .15rem 0; position: relative }
+  .tree .node { display: inline-flex; align-items: center; gap: .5rem; cursor: pointer; padding: .5rem .6rem; border-radius: .6rem; transition: background .15s ease, transform .15s ease }
+  .tree .node:hover { background: var(--hover); transform: translateX(1px) }
+  .node .chev { width: 14px; text-align: center; opacity: .85; transition: transform .15s ease }
+  .node .k { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace }
+  .node .meta { font-size: .72rem; color: var(--muted); padding: .12rem .5rem; border: 1px solid rgba(148,163,184,.25); border-radius: 999px }
+  .collapsed > ul { display: none }
+  .collapsed > .node .chev { transform: rotate(-90deg) }
+  .selected .node { background: var(--selected) }
+  .status { font-size: .85rem; color: var(--muted) }
+  .status.good { color: var(--ok) }
+  .status.bad { color: var(--bad) }
+</style>
 </head>
-<body>
-  <a class="skip-link" href="#main">Skip to main content</a>
+<body class="min-h-screen bg-surface-light text-textpri-light antialiased selection:bg-brand-light/20 dark:bg-surface-dark dark:text-textpri-dark">
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:bg-card-light dark:focus:bg-card-dark focus:text-textpri-light dark:focus:text-textpri-dark focus:ring-2 focus:ring-brand-light focus:px-3 focus:py-2 rounded">Skip to main content</a>
 
-  <header>
-    <h1 id="app-title">Omnisend Personalization Path Builder</h1>
-    <span class="tag" aria-hidden="true">[[ … ]]</span>
-    <div class="header-actions" role="group" aria-label="Display options">
-      <button id="contrastBtn" type="button" class="secondary" aria-pressed="false" aria-label="Toggle high-contrast mode">High contrast</button>
+  <header class="border-b border-edge-light bg-card-light/80 backdrop-blur dark:border-edge-dark dark:bg-card-dark/60">
+    <div class="mx-auto max-w-7xl px-4 py-4 grid grid-cols-1 md:grid-cols-[1fr_auto] items-center gap-3">
+      <div class="flex items-center gap-3">
+        <h1 id="app-title" class="text-xl md:text-2xl font-extrabold tracking-tight">Omnisend Personalization Path Builder</h1>
+        <span aria-hidden="true" class="text-slate-950 dark:text-slate-900 font-bold text-[11px] px-2 py-[2px] rounded-full bg-gradient-to-r from-brand-light to-emerald-400">[[ … ]]</span>
+      </div>
+      <div class="flex justify-start md:justify-end">
+        <button id="themeBtn" type="button" class="inline-flex items-center justify-center rounded-full border border-edge-light bg-card-light p-2.5 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition">
+          <svg id="iconSun" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500 dark:hidden transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364-1.414 1.414M7.05 16.95l-1.414 1.414m12.728 0-1.414-1.414M7.05 7.05 5.636 5.636M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+          <svg id="iconMoon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-400 hidden dark:block transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
+      </div>
     </div>
   </header>
 
-  <main id="main" class="wrap">
-    <section class="card area-howto" aria-labelledby="howto-title">
-      <h2 id="howto-title">How to use</h2>
-      <div class="body">
-        <ol class="steps" aria-label="Step-by-step instructions">
-          <li>Paste your event JSON under “Paste JSON”. Press JSON Breakdown or use Ctrl/⌘+Enter.</li>
-          <li>In “Pick a field”, browse the Tree and click a key to select it. Use → to expand, ← to collapse, ↑/↓ to move, Enter/Space to toggle.</li>
+  <main id="main" class="mx-auto max-w-7xl px-4 py-5 grid gap-4 lg:grid-cols-[minmax(340px,420px)_1fr]">
+    <section class="rounded-2xl border border-edge-light bg-card-light shadow-soft dark:border-edge-dark dark:bg-card-dark animate-fadeSlide">
+      <h2 class="m-0 px-4 py-3 text-sm text-textmuted-light bg-surface-light border-b border-edge-light dark:text-textmuted-dark dark:bg-surface-dark dark:border-edge-dark">How to use</h2>
+      <div class="p-4">
+        <ol class="list-decimal pl-5 grid gap-2 text-[15px]">
+          <li>Paste your event JSON below and press JSON Breakdown or use Ctrl/⌘+Enter.</li>
+          <li>Open “Pick a field”, browse the Tree and click a key to select it. Use → to expand, ← to collapse, ↑/↓ to move, Enter/Space to toggle.</li>
           <li>Use Quick search to jump directly to fields.</li>
           <li>Choose a tag prefix and optional fallback. The Omnisend tag updates instantly.</li>
-          <li>Copy the Dot/Bracket path, Omnisend tag, Dynamic alias, or Preview value.</li>
+          <li>Copy the Omnisend tag, Dynamic alias, or the Preview value.</li>
         </ol>
-        <div class="tips">
-          <p class="note">Shopify-style payloads often store properties under <code>raw</code> (for example <code>event.raw.shipping_address.city</code>).</p>
-          <p class="note">Arrays like <code>line_items</code> can be indexed (for example <code>[0]</code>) or iterated in Dynamic Content with <code>[[ item... ]]</code>.</p>
+        <div class="mt-3 space-y-2 text-[13px] text-textmuted-light dark:text-textmuted-dark">
+          <p>Shopify-style payloads often store properties under <code class="text-emerald-700 dark:text-emerald-300">raw</code> (for example <code class="text-emerald-700 dark:text-emerald-300">event.raw.shipping_address.city</code>).</p>
+          <p>Arrays like <code class="text-emerald-700 dark:text-emerald-300">line_items</code> can be indexed (for example <code class="text-emerald-700 dark:text-emerald-300">[0]</code>) or iterated in Dynamic Content with <code class="text-emerald-700 dark:text-emerald-300">[[ item... ]]</code>.</p>
         </div>
       </div>
     </section>
 
-    <section class="card area-left" aria-labelledby="paste-json-title">
-      <h2 id="paste-json-title">1) Paste JSON</h2>
-      <div class="body">
-        <label for="jsonInput" class="visually-hidden" style="position:absolute;left:-9999px;">Event JSON input</label>
-        <textarea id="jsonInput" placeholder='Paste your event JSON here (e.g., {"raw":{...}})' aria-describedby="json-help" spellcheck="false"></textarea>
-        <div class="controls">
-          <button id="parseBtn" type="button" class="primary">JSON Breakdown</button>
-          <button id="clearBtn" type="button" class="secondary" title="Clear input and tree">Clear</button>
-          <select id="prefixSelect" title="Which variable to prefix in the tag" aria-label="Tag prefix">
+    <section class="rounded-2xl border border-edge-light bg-card-light shadow-soft dark:border-edge-dark dark:bg-card-dark animate-fadeSlide">
+      <h2 class="m-0 px-4 py-3 text-sm text-textmuted-light bg-surface-light border-b border-edge-light dark:text-textmuted-dark dark:bg-surface-dark dark:border-edge-dark">1) Paste JSON</h2>
+      <div class="p-4">
+        <label for="jsonInput" class="sr-only">Event JSON input</label>
+        <textarea id="jsonInput" spellcheck="false" placeholder='Paste your event JSON here (e.g., {"raw":{...}})' aria-describedby="json-help" class="w-full min-h-[260px] rounded-xl border border-edge-light bg-surface-light px-3.5 py-3 text-[15px] placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-surface-dark transition"></textarea>
+
+        <div class="mt-3 grid gap-2 sm:grid-cols-2">
+          <button id="parseBtn" type="button" class="rounded-xl border border-cyan-600/50 bg-gradient-to-r from-cyan-600 to-cyan-500 px-4 py-3 text-sm font-semibold tracking-wide text-white hover:from-cyan-500 hover:to-cyan-400 focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] transition">JSON Breakdown</button>
+          <button id="clearBtn" type="button" title="Clear input and tree" class="rounded-xl border border-edge-light bg-card-light px-4 py-3 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition">Clear</button>
+          <select id="prefixSelect" aria-label="Tag prefix" title="Which variable to prefix in the tag" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.99] dark:border-edge-dark dark:bg-surface-dark transition">
             <option value="event" selected>Tag prefix: event</option>
             <option value="">Tag prefix: (none)</option>
           </select>
-          <input id="fallbackInput" type="text" placeholder="Optional fallback, e.g. there" title="Adds | default: 'value'" aria-label="Optional fallback value"/>
+          <input id="fallbackInput" type="text" placeholder="Optional fallback, e.g. there" title="Adds | default: 'value'" aria-label="Optional fallback value" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.99] dark:border-edge-dark dark:bg-surface-dark transition"/>
         </div>
-        <p id="json-help" class="note">Tip: For Shopify/standard events, data often lives under <code>raw</code> (e.g., <code>event.raw.shipping_address.city</code>). Lists like <code>line_items</code> can be indexed (<code>[0]</code>) or used with a Dynamic Layout (<code>[[ item.title ]]</code>).</p>
-        <p id="live-status" class="status" aria-live="polite"></p>
-        <p id="copy-status" class="status" aria-live="assertive"></p>
+
+        <p id="json-help" class="mt-3 text-[13px] text-textmuted-light dark:text-textmuted-dark">Tip: For Shopify/standard events, data often lives under <code class="text-emerald-700 dark:text-emerald-300">raw</code> (e.g., <code class="text-emerald-700 dark:text-emerald-300">event.raw.shipping_address.city</code>). Lists like <code class="text-emerald-700 dark:text-emerald-300">line_items</code> can be indexed (<code class="text-emerald-700 dark:text-emerald-300">[0]</code>) or used with a Dynamic Layout (<code class="text-emerald-700 dark:text-emerald-300">[[ item.title ]]</code>).</p>
+        <p id="live-status" class="status mt-2"></p>
+        <p id="copy-status" class="status mt-1"></p>
       </div>
     </section>
 
-    <section class="card area-right" aria-labelledby="pick-field-title">
-      <h2 id="pick-field-title">2) Pick a field → get the tag</h2>
-      <div class="body body-split">
-        <div class="side">
-          <label for="searchBox">Quick search</label>
-          <div class="search">
-            <input id="searchBox" type="search" placeholder="Search keys (e.g., line_items, email, city)" aria-controls="results" />
-            <button id="expandAll" class="copy" type="button" title="Expand all nodes">Expand all</button>
+    <section class="lg:col-span-2 rounded-2xl border border-edge-light bg-card-light shadow-soft dark:border-edge-dark dark:bg-card-dark animate-fadeSlide">
+      <h2 class="m-0 px-4 py-3 text-sm text-textmuted-light bg-surface-light border-b border-edge-light dark:text-textmuted-dark dark:bg-surface-dark dark:border-edge-dark">2) Pick a field → get the tag</h2>
+
+      <div class="p-4 grid gap-4 lg:grid-cols-[minmax(260px,360px)_1fr] items-start">
+        <div>
+          <label for="searchBox" class="block text-sm text-textmuted-light dark:text-textmuted-dark mb-2">Quick search</label>
+          <div class="grid grid-cols-[1fr_auto] gap-2">
+            <input id="searchBox" type="search" placeholder="Search keys (e.g., line_items, email, city)" aria-controls="results" class="rounded-xl border border-edge-light bg-surface-light px-3.5 py-2.5 text-sm placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-surface-dark transition"/>
+            <button id="expandAll" type="button" title="Expand all nodes" class="rounded-xl border border-edge-light bg-card-light px-3 py-2.5 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition">Expand all</button>
           </div>
-          <div id="results" class="results" aria-live="polite" role="listbox" aria-label="Search results"></div>
+          <div id="results" role="listbox" aria-label="Search results" class="mt-2 max-h-64 overflow-auto rounded-xl border border-edge-light bg-surface-light p-2 dark:border-edge-dark dark:bg-surface-dark"></div>
         </div>
-        <div class="main">
-          <label for="tree">Tree</label>
-          <div id="tree" class="tree" role="tree" aria-label="JSON tree"></div>
+
+        <div>
+          <label for="tree" class="block text-sm text-textmuted-light dark:text-textmuted-dark mb-2">Tree</label>
+          <div id="tree" role="tree" aria-label="JSON tree" class="tree rounded-xl border border-edge-light bg-surface-light p-2 dark:border-edge-dark dark:bg-surface-dark"></div>
         </div>
       </div>
 
-      <div class="body">
-        <div id="out" class="out" style="display:none;">
-          <div>
-            <div class="title">Selected node</div>
-            <div id="selMeta" class="status" aria-live="polite"></div>
+      <div class="p-4 border-t border-edge-light dark:border-edge-dark">
+        <div id="out" style="display:none;" class="grid gap-4 md:grid-cols-2">
+          <div class="space-y-1 animate-fadeSlide">
+            <div class="text-sm text-textmuted-light dark:text-textmuted-dark">Omnisend tag</div>
+            <div id="tag" role="textbox" aria-readonly="true" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2 font-mono text-sm break-words dark:border-edge-dark dark:bg-surface-dark"></div>
+            <button class="copy mt-1 rounded-xl border border-edge-light bg-card-light px-3 py-2 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" data-copy="tag" type="button" aria-label="Copy Omnisend tag">Copy tag</button>
           </div>
-          <div>
-            <div class="title">Dot/Bracket path</div>
-            <div class="line" id="dotPath" role="textbox" aria-readonly="true"></div>
-            <button class="copy" data-copy="dotPath" type="button" aria-label="Copy dot or bracket path">Copy path</button>
+
+          <div id="dynBox" style="display:none;" class="space-y-1 animate-fadeSlide">
+            <div class="text-sm text-textmuted-light dark:text-textmuted-dark">Dynamic Layout suggestion (list alias)</div>
+            <div id="dynTag" role="textbox" aria-readonly="true" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2 font-mono text-sm break-words dark:border-edge-dark dark:bg-surface-dark"></div>
+            <button class="copy mt-1 rounded-xl border border-edge-light bg-card-light px-3 py-2 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" data-copy="dynTag" type="button" aria-label="Copy alias tag">Copy alias tag</button>
+            <div class="text-[13px] text-textmuted-light dark:text-textmuted-dark">Use this inside a Dynamic Content layout whose data source is the list (e.g., <code class="text-emerald-700 dark:text-emerald-300">Raw → line_items</code>), where each item is aliased as <code class="text-emerald-700 dark:text-emerald-300">item</code>.</div>
           </div>
-          <div>
-            <div class="title">Omnisend tag</div>
-            <div class="line" id="tag" role="textbox" aria-readonly="true"></div>
-            <button class="copy" data-copy="tag" type="button" aria-label="Copy Omnisend tag">Copy tag</button>
-          </div>
-          <div id="dynBox" style="display:none;">
-            <div class="title">Dynamic Layout suggestion (list alias)</div>
-            <div class="line" id="dynTag" role="textbox" aria-readonly="true"></div>
-            <button class="copy" data-copy="dynTag" type="button" aria-label="Copy alias tag">Copy alias tag</button>
-            <div class="note">Use this inside a Dynamic Content layout whose data source is the list (e.g., <code>Raw → line_items</code>), where each item is aliased as <code>item</code>.</div>
-          </div>
-          <div>
-            <div class="title">Preview value</div>
-            <div class="line" id="preview" role="textbox" aria-readonly="true"></div>
-            <button class="copy" data-copy="preview" type="button" aria-label="Copy preview value">Copy value</button>
+
+          <div class="space-y-1 animate-fadeSlide">
+            <div class="text-sm text-textmuted-light dark:text-textmuted-dark">Preview value</div>
+            <div id="preview" role="textbox" aria-readonly="true" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2 font-mono text-sm break-words dark:border-edge-dark dark:bg-surface-dark"></div>
+            <button class="copy mt-1 rounded-xl border border-edge-light bg-card-light px-3 py-2 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" data-copy="preview" type="button" aria-label="Copy preview value">Copy value</button>
           </div>
         </div>
       </div>
 
-      <div class="footer-note">
-        Heads-up: Omnisend personalization uses double square brackets (e.g., <code>[[ contact.first_name ]]</code>), supports Liquid filters like <code>| default:</code> and <code>| capitalize</code>, and event properties (often under <code>raw</code>) in Automations. Lists can be iterated in Dynamic Content. See <a href="https://support.omnisend.com/en/articles/1061845-personalization-in-channels">Omnisend’s docs</a> for details.
+      <div class="px-4 py-3 text-[12px] text-textmuted-light border-t border-edge-light dark:text-textmuted-dark dark:border-edge-dark">
+        Heads-up: Omnisend personalization uses double square brackets (e.g., <code class="text-emerald-700 dark:text-emerald-300">[[ contact.first_name ]]</code>), supports Liquid filters like <code class="text-emerald-700 dark:text-emerald-300">| default:</code> and <code class="text-emerald-700 dark:text-emerald-300">| capitalize</code>, and event properties (often under <code class="text-emerald-700 dark:text-emerald-300">raw</code>) in Automations. See
+        <a class="underline decoration-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition" href="https://support.omnisend.com/en/articles/1061845-personalization-in-channels">Omnisend’s docs</a>.
       </div>
     </section>
   </main>
 
-  <footer class="footer-note" role="contentinfo">
+  <footer role="contentinfo" class="mx-auto max-w-7xl px-4 py-6 text-textmuted-light text-[12px] dark:text-textmuted-dark">
     <small>Keyboard: ↑ ↓ to move · → to expand/select · ← to collapse · Enter/Space to toggle · Home/End to jump.</small>
   </footer>
 
-<script src="scripts.js"></script>
+  <script>
+    (() => {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      const saved = localStorage.getItem('theme')
+      const root = document.documentElement
+      if ((saved === 'dark') || (!saved && prefersDark)) root.classList.add('dark')
+      if (saved === 'light') root.classList.remove('dark')
+    })()
+  </script>
+  <script src="scripts.js"></script>
 </body>
 </html>

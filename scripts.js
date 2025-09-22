@@ -1,12 +1,9 @@
 (() => {
-  const bodyEl = document.body;
   const input = document.getElementById('jsonInput');
   const parseBtn = document.getElementById('parseBtn');
   const clearBtn = document.getElementById('clearBtn');
   const treeEl = document.getElementById('tree');
   const out = document.getElementById('out');
-  const selMeta = document.getElementById('selMeta');
-  const dotPathEl = document.getElementById('dotPath');
   const tagEl = document.getElementById('tag');
   const dynBox = document.getElementById('dynBox');
   const dynTagEl = document.getElementById('dynTag');
@@ -18,25 +15,20 @@
   const expandAllBtn = document.getElementById('expandAll');
   const liveStatus = document.getElementById('live-status');
   const copyStatus = document.getElementById('copy-status');
-  const contrastBtn = document.getElementById('contrastBtn');
+  const themeBtn = document.getElementById('themeBtn');
 
-  let rootData = null;
   let leafIndex = [];
   let lastTokens = null;
 
   function announce(msg, isError=false) {
+    if (!liveStatus) return;
     liveStatus.textContent = msg;
     liveStatus.classList.toggle('bad', isError);
     liveStatus.classList.toggle('good', !isError);
   }
 
   async function copyToClipboard(text) {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-        return true;
-      }
-    } catch (e) {}
+    try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; } } catch (e) {}
     try {
       const ta = document.createElement('textarea');
       ta.value = text;
@@ -50,9 +42,7 @@
       const ok = document.execCommand('copy');
       document.body.removeChild(ta);
       return ok;
-    } catch (e) {
-      return false;
-    }
+    } catch (e) { return false; }
   }
 
   const isObject = v => v && typeof v === 'object' && !Array.isArray(v);
@@ -60,24 +50,14 @@
   const isValidIdent = k => /^[A-Za-z_][A-Za-z0-9_]*$/.test(k);
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  function tokenToString(t) {
-    if (t.t === 'key') {
-      return isValidIdent(t.v) ? '.' + t.v : `['${t.v.replace(/'/g,"\\'")}']`;
-    } else {
-      return `[${t.v}]`;
-    }
-  }
+  function tokenToString(t) { return t.t === 'key' ? (isValidIdent(t.v) ? '.' + t.v : `['${t.v.replace(/'/g,"\\'")}']`) : `[${t.v}]`; }
   function tokensToPath(tokens, {stripLeadingDot=false} = {}) {
     if (!tokens || !tokens.length) return '';
     let s = tokens.map(tokenToString).join('');
     if (stripLeadingDot && s.startsWith('.')) s = s.slice(1);
     return s;
   }
-  function tokensAfterFirstIndex(tokens) {
-    const i = tokens.findIndex(t => t.t === 'index');
-    if (i === -1) return null;
-    return tokens.slice(i+1);
-  }
+  function tokensAfterFirstIndex(tokens) { const i = tokens.findIndex(t => t.t === 'index'); return i === -1 ? null : tokens.slice(i+1); }
   function buildTag(tokens) {
     const prefix = prefixSelect.value.trim();
     const base = tokensToPath(tokens, {stripLeadingDot: true});
@@ -96,11 +76,7 @@
     if (fb) tag = `[[ item.${inner} | default: '${fb.replace(/'/g,"\\'")}' ]]`;
     return tag;
   }
-  function summarize(val) {
-    if (isScalar(val)) return JSON.stringify(val);
-    if (Array.isArray(val)) return `Array(${val.length})`;
-    return `Object(${Object.keys(val).length})`;
-  }
+  function summarize(val) { if (isScalar(val)) return JSON.stringify(val); if (Array.isArray(val)) return `Array(${val.length})`; return `Object(${Object.keys(val).length})`; }
 
   function makeNode(label, value, tokens, depth=1) {
     const li = document.createElement('li');
@@ -127,14 +103,9 @@
 
     const meta = document.createElement('span');
     meta.className = 'meta';
-    if (isScalar(value)) {
-      li.classList.remove('collapsed');
-      meta.textContent = summarize(value);
-    } else if (Array.isArray(value)) {
-      meta.textContent = `Array(${value.length})`;
-    } else {
-      meta.textContent = `Object(${Object.keys(value).length})`;
-    }
+    if (isScalar(value)) { li.classList.remove('collapsed'); meta.textContent = summarize(value); }
+    else if (Array.isArray(value)) { meta.textContent = `Array(${value.length})`; }
+    else { meta.textContent = `Object(${Object.keys(value).length})`; }
 
     node.appendChild(chev);
     node.appendChild(k);
@@ -149,17 +120,13 @@
       value.forEach((v, idx) => {
         const childTokens = tokens.concat([{t:'index', v: idx}]);
         ul.appendChild(makeNode(`[${idx}]`, v, childTokens, depth+1));
-        if (isScalar(v)) {
-          leafIndex.push({ pathTokens: childTokens, pathStr: tokensToPath(childTokens, {stripLeadingDot:true}), type: typeof v, sample: v });
-        }
+        if (isScalar(v)) { leafIndex.push({ pathTokens: childTokens, pathStr: tokensToPath(childTokens, {stripLeadingDot:true}), type: typeof v, sample: v }); }
       });
     } else if (isObject(value)) {
       Object.keys(value).sort().forEach(kkey => {
         const childTokens = tokens.concat([{t:'key', v: kkey}]);
         ul.appendChild(makeNode(kkey, value[kkey], childTokens, depth+1));
-        if (isScalar(value[kkey])) {
-          leafIndex.push({ pathTokens: childTokens, pathStr: tokensToPath(childTokens, {stripLeadingDot:true}), type: typeof value[kkey], sample: value[kkey] });
-        }
+        if (isScalar(value[kkey])) { leafIndex.push({ pathTokens: childTokens, pathStr: tokensToPath(childTokens, {stripLeadingDot:true}), type: typeof value[kkey], sample: value[kkey] }); }
       });
     }
 
@@ -188,23 +155,13 @@
       switch (key) {
         case 'ArrowRight':
           e.preventDefault();
-          if (expandable && current.classList.contains('collapsed')) {
-            toggleExpand(current, true);
-            focusNode(node);
-          } else {
-            const firstChild = current.querySelector(':scope > ul > li > .node');
-            if (firstChild) firstChild.focus();
-          }
+          if (expandable && current.classList.contains('collapsed')) { toggleExpand(current, true); focusNode(node); }
+          else { const firstChild = current.querySelector(':scope > ul > li > .node'); if (firstChild) firstChild.focus(); }
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          if (expandable && !current.classList.contains('collapsed')) {
-            toggleExpand(current, false);
-            focusNode(node);
-          } else {
-            const parentLi = current.parentElement.closest('li[role="treeitem"]');
-            if (parentLi) parentLi.querySelector(':scope > .node').focus();
-          }
+          if (expandable && !current.classList.contains('collapsed')) { toggleExpand(current, false); focusNode(node); }
+          else { const parentLi = current.parentElement.closest('li[role="treeitem"]'); if (parentLi) parentLi.querySelector(':scope > .node').focus(); }
           break;
         case 'ArrowDown':
           e.preventDefault();
@@ -242,53 +199,29 @@
   }
 
   function toggleExpand(li, expand=true) {
-    if (expand) {
-      li.classList.remove('collapsed');
-      li.setAttribute('aria-expanded', 'true');
-    } else {
-      li.classList.add('collapsed');
-      li.setAttribute('aria-expanded', 'false');
-    }
+    if (expand) { li.classList.remove('collapsed'); li.setAttribute('aria-expanded', 'true'); }
+    else { li.classList.add('collapsed'); li.setAttribute('aria-expanded', 'false'); }
   }
 
-  function focusNext(li) {
-    const items = [...treeEl.querySelectorAll('li[role="treeitem"]')];
-    const i = items.indexOf(li);
-    if (i >= 0 && i < items.length - 1) return items[i+1];
-    return null;
-  }
-  function focusPrev(li) {
-    const items = [...treeEl.querySelectorAll('li[role="treeitem"]')];
-    const i = items.indexOf(li);
-    if (i > 0) return items[i-1];
-    return null;
-  }
+  function focusNext(li) { const items = [...treeEl.querySelectorAll('li[role="treeitem"]')]; const i = items.indexOf(li); return (i >= 0 && i < items.length - 1) ? items[i+1] : null; }
+  function focusPrev(li) { const items = [...treeEl.querySelectorAll('li[role="treeitem"]')]; const i = items.indexOf(li); return i > 0 ? items[i-1] : null; }
 
   function selectNode(tokens, value, liEl) {
-    treeEl.querySelectorAll('li[role="treeitem"]').forEach(el => {
-      el.classList.remove('selected');
-      el.setAttribute('aria-selected', 'false');
-    });
+    treeEl.querySelectorAll('li[role="treeitem"]').forEach(el => { el.classList.remove('selected'); el.setAttribute('aria-selected', 'false'); });
     liEl.classList.add('selected');
     liEl.setAttribute('aria-selected', 'true');
 
     lastTokens = tokens;
 
-    const path = tokensToPath(tokens, {stripLeadingDot:true});
-    selMeta.innerHTML = `Path: <code>${esc(path)}</code> · Type: <b>${Array.isArray(value) ? 'array' : (isObject(value) ? 'object' : typeof value)}</b>`;
-    dotPathEl.textContent = path;
     tagEl.textContent = buildTag(tokens);
     previewEl.textContent = summarize(value);
     out.style.display = 'grid';
+    out.classList.add('animate-pop');
+    setTimeout(() => out.classList.remove('animate-pop'), 220);
 
     const dyn = buildDynamicAliasTag(tokens);
-    if (dyn) {
-      dynBox.style.display = '';
-      dynTagEl.textContent = dyn;
-    } else {
-      dynBox.style.display = 'none';
-      dynTagEl.textContent = '';
-    }
+    if (dyn) { dynBox.style.display = ''; dynTagEl.textContent = dyn; }
+    else { dynBox.style.display = 'none'; dynTagEl.textContent = ''; }
   }
 
   function buildTree(data) {
@@ -314,7 +247,7 @@
       const li = document.createElement('li');
       li.setAttribute('role','treeitem');
       li.setAttribute('aria-level','1');
-      li.innerHTML = `<div class="node leaf" tabindex="0"><span class="chev" style="visibility:hidden">•</span><span class="k">root</span><span class="meta">${summarize(data)}</span></div>`;
+      li.innerHTML = `<div class="node" tabindex="0"><span class="chev" style="visibility:hidden">•</span><span class="k">root</span><span class="meta">${summarize(data)}</span></div>`;
       rootUl.appendChild(li);
     }
   }
@@ -324,13 +257,12 @@
     if (!txt) { announce('Paste JSON first', true); return; }
     try {
       const data = JSON.parse(txt);
-      rootData = data;
       buildTree(data);
       out.style.display = 'none';
       resultsEl.innerHTML = '';
       announce('JSON parsed ✓');
       const first = treeEl.querySelector('.node');
-      if (first) focusNode(first);
+      if (first) first.focus();
     } catch (err) {
       announce('Invalid JSON: ' + err.message, true);
       out.style.display = 'none';
@@ -348,9 +280,9 @@
     const ok = await copyToClipboard(text);
     const original = btn.textContent;
     btn.textContent = ok ? 'Copied!' : 'Copy failed';
-    copyStatus.textContent = ok
-      ? `${btn.getAttribute('aria-label') || 'Copied value'} to clipboard.`
-      : `Unable to copy. You can select the text and press ⌘/Ctrl+C.`;
+    btn.classList.add('animate-pop');
+    setTimeout(() => btn.classList.remove('animate-pop'), 220);
+    if (copyStatus) { copyStatus.textContent = ok ? `${btn.getAttribute('aria-label') || 'Copied value'} to clipboard.` : `Unable to copy. You can select the text and press ⌘/Ctrl+C.`; }
     setTimeout(() => { btn.textContent = original; }, 1200);
   });
 
@@ -361,13 +293,13 @@
     const hits = leafIndex.filter(p => p.pathStr.toLowerCase().includes(q)).slice(0, 50);
     for (const h of hits) {
       const div = document.createElement('div');
-      div.className = 'hit';
+      div.className = 'hit rounded-lg px-2 py-2 text-sm transition hover:bg-sky-500/10 cursor-pointer';
       div.setAttribute('role','option');
       div.setAttribute('tabindex','0');
-      div.innerHTML = `<span class="pill">${esc(typeof h.sample)}</span> <code>${esc(h.pathStr)}</code> <span class="pill">${esc(summarize(h.sample))}</span>`;
+      div.innerHTML = `<span style="font-size:.7rem;color:var(--muted);border:1px solid rgba(148,163,184,.25);border-radius:999px;padding:0 .5rem;margin-right:.35rem">${esc(typeof h.sample)}</span> <code>${esc(h.pathStr)}</code> <span style="font-size:.7rem;color:var(--muted);border:1px solid rgba(148,163,184,.25);border-radius:999px;padding:0 .5rem;margin-left:.35rem">${esc(summarize(h.sample))}</span>`;
       const choose = () => {
         selectNode(h.pathTokens, h.sample, treeEl.querySelector('li.selected') || document.createElement('li'));
-        dotPathEl.scrollIntoView({behavior:'smooth', block:'center'});
+        tagEl.scrollIntoView({behavior:'smooth', block:'center'});
       };
       div.addEventListener('click', choose);
       div.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); choose(); }});
@@ -376,23 +308,15 @@
   });
 
   expandAllBtn.addEventListener('click', () => {
-    treeEl.querySelectorAll('li.collapsed').forEach(li => {
-      li.classList.remove('collapsed');
-      li.setAttribute('aria-expanded','true');
-    });
+    treeEl.querySelectorAll('li.collapsed').forEach(li => { li.classList.remove('collapsed'); li.setAttribute('aria-expanded','true'); });
   });
 
   [prefixSelect, fallbackInput].forEach(el => el.addEventListener('input', () => {
     if (!lastTokens) return;
     tagEl.textContent = buildTag(lastTokens);
     const dyn = buildDynamicAliasTag(lastTokens);
-    if (dyn) {
-      dynBox.style.display = '';
-      dynTagEl.textContent = dyn;
-    } else {
-      dynBox.style.display = 'none';
-      dynTagEl.textContent = '';
-    }
+    if (dyn) { dynBox.style.display = ''; dynTagEl.textContent = dyn; }
+    else { dynBox.style.display = 'none'; dynTagEl.textContent = ''; }
   }));
 
   parseBtn.addEventListener('click', tryParse);
@@ -405,14 +329,19 @@
     searchBox.value = '';
   });
 
-  contrastBtn.addEventListener('click', () => {
-    const on = bodyEl.classList.toggle('contrast-boost');
-    contrastBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  themeBtn.addEventListener('click', () => {
+    const root = document.documentElement;
+    const nowDark = root.classList.toggle('dark');
+    localStorage.setItem('theme', nowDark ? 'dark' : 'light');
+    const sun = document.getElementById('iconSun');
+    const moon = document.getElementById('iconMoon');
+    sun.classList.toggle('hidden', nowDark);
+    moon.classList.toggle('hidden', !nowDark);
+    themeBtn.classList.add('animate-pop');
+    setTimeout(() => themeBtn.classList.remove('animate-pop'), 220);
   });
 
   input.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault(); tryParse();
-    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); tryParse(); }
   });
 })();
