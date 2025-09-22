@@ -84,7 +84,7 @@
         </ol>
         <div class="mt-3 space-y-2 text-[13px] text-textmuted-light dark:text-textmuted-dark">
           <p>Shopify-style payloads often store properties under <code class="text-emerald-700 dark:text-emerald-300">raw</code> (for example <code class="text-emerald-700 dark:text-emerald-300">event.raw.shipping_address.city</code>).</p>
-          <p>Arrays like <code class="text-emerald-700 dark:text-emerald-300">line_items</code> can be indexed (for example <code class="text-emerald-700 dark:text-emerald-300">[0]</code>) or iterated in Dynamic Content with <code class="text-emerald-700 dark:text-emerald-300">[[ item... ]]</code>.</p>
+          <p>Arrays like <code class="text-emerald-700 dark:text-emerald-300">line_items</code> can be indexed (for example <code class="text-emerald-700 dark:text-emerald-300">[0]</code>)</p>
         </div>
       </div>
     </section>
@@ -104,8 +104,6 @@
           </select>
           <input id="fallbackInput" type="text" placeholder="Optional fallback, e.g. there" title="Adds | default: 'value'" aria-label="Optional fallback value" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.99] dark:border-edge-dark dark:bg-surface-dark transition"/>
         </div>
-
-        <p id="json-help" class="mt-3 text-[13px] text-textmuted-light dark:text-textmuted-dark">Tip: For Shopify/standard events, data often lives under <code class="text-emerald-700 dark:text-emerald-300">raw</code> (e.g., <code class="text-emerald-700 dark:text-emerald-300">event.raw.shipping_address.city</code>). Lists like <code class="text-emerald-700 dark:text-emerald-300">line_items</code> can be indexed (<code class="text-emerald-700 dark:text-emerald-300">[0]</code>) or used with a Dynamic Layout (<code class="text-emerald-700 dark:text-emerald-300">[[ item.title ]]</code>).</p>
         <p id="live-status" class="status mt-2"></p>
         <p id="copy-status" class="status mt-1"></p>
       </div>
