@@ -4,193 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Omnisend Personalization Path Builder</title>
-<style>
-  :root {
-    --bg: #0b0f14;
-    --panel: #111720;
-    --muted: #93a3b1;
-    --text: #e6edf3;
-    --accent: #5bd0ff;
-    --accent-2: #9bffd3;
-    --danger: #ff7b7b;
-    --ok: #78ffa0;
-    --border: #223043;
-    --focus: #c6f2ff;
-  }
-
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #f7fbff;
-      --panel: #ffffff;
-      --muted: #405066;
-      --text: #0b1320;
-      --accent: #0b84ff;
-      --accent-2: #00b37a;
-      --danger: #c62828;
-      --ok: #1b8e46;
-      --border: #d6e2f0;
-      --focus: #0b84ff;
-    }
-  }
-
-  /* High-contrast mode toggle */
-  .contrast-boost {
-    --muted: #cdd7e1;
-    --text: #ffffff;
-    --border: #7ab2ff;
-    --focus: #ffffff;
-  }
-
-  * { box-sizing: border-box; }
-
-  html { scroll-behavior: smooth; }
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    * { animation: none !important; transition: none !important; }
-  }
-
-  body {
-    margin: 0;
-    background: linear-gradient(180deg, var(--bg) 0%, #0d121a 100%);
-    color: var(--text);
-    font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-    font-size: clamp(14px, 1.2vw, 16px);
-  }
-
-  a { color: var(--accent); }
-
-  .skip-link {
-    position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden;
-  }
-  .skip-link:focus {
-    left: 12px; top: 12px; width: auto; height: auto; padding: 8px 10px;
-    background: var(--panel); border: 2px solid var(--focus); border-radius: 8px; z-index: 10;
-  }
-
-  header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  header h1 {
-    margin: 0;
-    font-size: clamp(18px, 2vw, 22px);
-    letter-spacing: .2px;
-    font-weight: 700;
-  }
-  header .tag {
-    font-size: 12px;
-    color: #0b0f14;
-    background: linear-gradient(90deg, var(--accent), var(--accent-2));
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-weight: 700;
-  }
-  .header-actions {
-    margin-left: auto; display: flex; gap: 8px; align-items: center;
-  }
-
-  .wrap { display: grid; gap: 16px; padding: 16px; grid-template-columns: minmax(280px, 400px) 1fr; }
-  @media (max-width: 980px) { .wrap { grid-template-columns: 1fr; } }
-
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
-  .card h2 {
-    margin: 0; padding: 12px 14px; font-size: 13px; color: var(--muted);
-    background: #0f1622; border-bottom: 1px solid var(--border); letter-spacing: .2px;
-  }
-  @media (prefers-color-scheme: light) {
-    .card h2 { background: #f1f7ff; }
-  }
-  .card .body { padding: 12px; }
-
-  textarea, select, input[type="text"], input[type="search"] {
-    width: 100%; min-height: 200px;
-    background: #0b0f14; color: var(--text);
-    border: 1px solid var(--border); border-radius: 8px;
-    padding: 10px 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    outline: none;
-  }
-  input[type="search"], select, input[type="text"] { min-height: auto; font-family: inherit; }
-  textarea:focus, select:focus, input:focus, button:focus { outline: 3px solid transparent; box-shadow: 0 0 0 3px var(--focus); }
-
-  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-  @media (max-width: 520px) { .controls { grid-template-columns: 1fr; } }
-
-  button {
-    background: #0b0f14; color: var(--text);
-    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
-    font-size: 13px; cursor: pointer; line-height: 1;
-    min-height: 44px; /* bigger touch target */
-  }
-  button.primary {
-    background: linear-gradient(90deg, #116a8f, #114a8f);
-    border-color: #165a8f; font-weight: 700;
-  }
-  button.secondary { background: #0b0f14; }
-
-  .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
-
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-  @media (max-width: 980px) { .row { grid-template-columns: 1fr; } }
-
-  .row > div { display: flex; flex-direction: column; gap: 6px; }
-  label { font-size: 12px; color: var(--muted); }
-
-  /* Tree */
-  .tree {
-    max-height: min(70vh, 700px); overflow: auto; padding: 8px; border: 1px dashed var(--border); border-radius: 10px;
-    background: #0b0f14;
-  }
-  .tree ul { list-style: none; margin: 0; padding-left: 14px; }
-  .tree li { margin: 2px 0; position: relative; }
-
-  .tree .node {
-    display: inline-flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 8px; border-radius: 8px;
-  }
-  .tree .node:hover { background: rgba(91, 208, 255, 0.09); }
-  .tree .node:focus-visible { outline: 3px solid transparent; box-shadow: 0 0 0 3px var(--focus); }
-  .node .chev { width: 12px; text-align: center; transition: transform .15s ease; opacity: .8; }
-  .node .k { font-family: ui-monospace, monospace; }
-  .node .meta {
-    font-size: 11px; color: var(--muted); padding: 1px 6px; border: 1px solid var(--border); border-radius: 999px;
-  }
-  .collapsed > ul { display: none; }
-  .collapsed > .node .chev { transform: rotate(-90deg); }
-  .leaf { color: var(--accent-2); }
-  .selected .node { background: rgba(91, 208, 255, 0.14); }
-
-  .out { display: grid; gap: 10px; }
-  .out .line {
-    background: #0b0f14; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    word-break: break-all;
-  }
-  .out .title { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-  .copy {
-    font-size: 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
-    background: #0b0f14; color: var(--text); cursor: pointer; min-height: 40px;
-  }
-
-  .status { font-size: 12px; color: var(--muted); }
-  .status.bad { color: var(--danger); }
-  .status.good { color: var(--ok); }
-
-  .search { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 8px; }
-  .results { max-height: 200px; overflow: auto; border: 1px dashed var(--border); border-radius: 8px; padding: 6px; }
-  .results .hit { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 6px; cursor: pointer; }
-  .results .hit:hover, .results .hit:focus { background: rgba(155, 255, 211, .08); outline: none; }
-  .pill { font-size: 10px; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 0 6px; }
-  .footer-note { color: var(--muted); font-size: 11px; padding: 8px 12px; border-top: 1px solid var(--border); }
-  .footer-note a { color: var(--muted); font-weight:600 }
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -204,15 +18,30 @@
   </header>
 
   <main id="main" class="wrap">
-    <!-- Left: Input + Options -->
-    <section class="card" aria-labelledby="paste-json-title">
+    <section class="card area-howto" aria-labelledby="howto-title">
+      <h2 id="howto-title">How to use</h2>
+      <div class="body">
+        <ol class="steps" aria-label="Step-by-step instructions">
+          <li>Paste your event JSON under “Paste JSON”. Press JSON Breakdown or use Ctrl/⌘+Enter.</li>
+          <li>In “Pick a field”, browse the Tree and click a key to select it. Use → to expand, ← to collapse, ↑/↓ to move, Enter/Space to toggle.</li>
+          <li>Use Quick search to jump directly to fields.</li>
+          <li>Choose a tag prefix and optional fallback. The Omnisend tag updates instantly.</li>
+          <li>Copy the Dot/Bracket path, Omnisend tag, Dynamic alias, or Preview value.</li>
+        </ol>
+        <div class="tips">
+          <p class="note">Shopify-style payloads often store properties under <code>raw</code> (for example <code>event.raw.shipping_address.city</code>).</p>
+          <p class="note">Arrays like <code>line_items</code> can be indexed (for example <code>[0]</code>) or iterated in Dynamic Content with <code>[[ item... ]]</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card area-left" aria-labelledby="paste-json-title">
       <h2 id="paste-json-title">1) Paste JSON</h2>
       <div class="body">
         <label for="jsonInput" class="visually-hidden" style="position:absolute;left:-9999px;">Event JSON input</label>
         <textarea id="jsonInput" placeholder='Paste your event JSON here (e.g., {"raw":{...}})' aria-describedby="json-help" spellcheck="false"></textarea>
-
         <div class="controls">
-          <button id="parseBtn" type="button" class="primary">Parse JSON</button>
+          <button id="parseBtn" type="button" class="primary">JSON Breakdown</button>
           <button id="clearBtn" type="button" class="secondary" title="Clear input and tree">Clear</button>
           <select id="prefixSelect" title="Which variable to prefix in the tag" aria-label="Tag prefix">
             <option value="event" selected>Tag prefix: event</option>
@@ -220,34 +49,31 @@
           </select>
           <input id="fallbackInput" type="text" placeholder="Optional fallback, e.g. there" title="Adds | default: 'value'" aria-label="Optional fallback value"/>
         </div>
-        <p id="json-help" class="note">
-          Tip: For Shopify/standard events, data often lives under <code>raw</code> (e.g., <code>event.raw.shipping_address.city</code>). Lists like <code>line_items</code> can be indexed (<code>[0]</code>) or used with a Dynamic Layout (<code>[[ item.title ]]</code>).
-        </p>
+        <p id="json-help" class="note">Tip: For Shopify/standard events, data often lives under <code>raw</code> (e.g., <code>event.raw.shipping_address.city</code>). Lists like <code>line_items</code> can be indexed (<code>[0]</code>) or used with a Dynamic Layout (<code>[[ item.title ]]</code>).</p>
         <p id="live-status" class="status" aria-live="polite"></p>
         <p id="copy-status" class="status" aria-live="assertive"></p>
       </div>
     </section>
 
-    <!-- Right: Tree + Output -->
-    <section class="card" aria-labelledby="pick-field-title">
+    <section class="card area-right" aria-labelledby="pick-field-title">
       <h2 id="pick-field-title">2) Pick a field → get the tag</h2>
-      <div class="body">
-        <div class="row">
-          <div>
-            <label for="searchBox">Quick search</label>
-            <div class="search">
-              <input id="searchBox" type="search" placeholder="Search keys (e.g., line_items, email, city)" aria-controls="results" />
-              <button id="expandAll" class="copy" type="button" title="Expand all nodes">Expand all</button>
-            </div>
-            <div id="results" class="results" aria-live="polite" role="listbox" aria-label="Search results"></div>
+      <div class="body body-split">
+        <div class="side">
+          <label for="searchBox">Quick search</label>
+          <div class="search">
+            <input id="searchBox" type="search" placeholder="Search keys (e.g., line_items, email, city)" aria-controls="results" />
+            <button id="expandAll" class="copy" type="button" title="Expand all nodes">Expand all</button>
           </div>
-          <div>
-            <label for="tree">Tree</label>
-            <div id="tree" class="tree" role="tree" aria-label="JSON tree"></div>
-          </div>
+          <div id="results" class="results" aria-live="polite" role="listbox" aria-label="Search results"></div>
         </div>
+        <div class="main">
+          <label for="tree">Tree</label>
+          <div id="tree" class="tree" role="tree" aria-label="JSON tree"></div>
+        </div>
+      </div>
 
-        <div id="out" class="out" style="margin-top:12px; display:none;">
+      <div class="body">
+        <div id="out" class="out" style="display:none;">
           <div>
             <div class="title">Selected node</div>
             <div id="selMeta" class="status" aria-live="polite"></div>
@@ -275,6 +101,7 @@
           </div>
         </div>
       </div>
+
       <div class="footer-note">
         Heads-up: Omnisend personalization uses double square brackets (e.g., <code>[[ contact.first_name ]]</code>), supports Liquid filters like <code>| default:</code> and <code>| capitalize</code>, and event properties (often under <code>raw</code>) in Automations. Lists can be iterated in Dynamic Content. See <a href="https://support.omnisend.com/en/articles/1061845-personalization-in-channels">Omnisend’s docs</a> for details.
       </div>
@@ -285,433 +112,6 @@
     <small>Keyboard: ↑ ↓ to move · → to expand/select · ← to collapse · Enter/Space to toggle · Home/End to jump.</small>
   </footer>
 
-<script>
-(() => {
-  const bodyEl = document.body;
-  const input = document.getElementById('jsonInput');
-  const parseBtn = document.getElementById('parseBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const treeEl = document.getElementById('tree');
-  const out = document.getElementById('out');
-  const selMeta = document.getElementById('selMeta');
-  const dotPathEl = document.getElementById('dotPath');
-  const tagEl = document.getElementById('tag');
-  const dynBox = document.getElementById('dynBox');
-  const dynTagEl = document.getElementById('dynTag');
-  const previewEl = document.getElementById('preview');
-  const prefixSelect = document.getElementById('prefixSelect');
-  const fallbackInput = document.getElementById('fallbackInput');
-  const searchBox = document.getElementById('searchBox');
-  const resultsEl = document.getElementById('results');
-  const expandAllBtn = document.getElementById('expandAll');
-  const liveStatus = document.getElementById('live-status');
-  const copyStatus = document.getElementById('copy-status');
-  const contrastBtn = document.getElementById('contrastBtn');
-
-  let rootData = null;
-  let leafIndex = []; 
-  let lastTokens = null;
-
-
-  function announce(msg, isError=false) {
-    liveStatus.textContent = msg;
-    liveStatus.classList.toggle('bad', isError);
-    liveStatus.classList.toggle('good', !isError);
-  }
-
-  async function copyToClipboard(text) {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-        return true;
-      }
-    } catch (e) { /* fall through to legacy path */ }
-    try {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.setAttribute('readonly', '');
-      ta.style.position = 'fixed';
-      ta.style.top = '-9999px';
-      ta.style.left = '-9999px';
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      const ok = document.execCommand('copy');
-      document.body.removeChild(ta);
-      return ok;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  const isObject = v => v && typeof v === 'object' && !Array.isArray(v);
-  const isScalar = v => (v === null) || (typeof v !== 'object');
-  const isValidIdent = k => /^[A-Za-z_][A-Za-z0-9_]*$/.test(k);
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-  function tokenToString(t) {
-    if (t.t === 'key') {
-      return isValidIdent(t.v) ? '.' + t.v : `['${t.v.replace(/'/g,"\\'")}']`;
-    } else { // index
-      return `[${t.v}]`;
-    }
-  }
-  function tokensToPath(tokens, {stripLeadingDot=false} = {}) {
-    if (!tokens || !tokens.length) return '';
-    let s = tokens.map(tokenToString).join('');
-    if (stripLeadingDot && s.startsWith('.')) s = s.slice(1);
-    return s;
-  }
-  function tokensAfterFirstIndex(tokens) {
-    const i = tokens.findIndex(t => t.t === 'index');
-    if (i === -1) return null;
-    return tokens.slice(i+1);
-  }
-  function buildTag(tokens) {
-    const prefix = prefixSelect.value.trim();
-    const base = tokensToPath(tokens, {stripLeadingDot: true});
-    const fb = fallbackInput.value.trim();
-    let core = (prefix ? `${prefix}.` : '') + base;
-    let tag = `[[ ${core} ]]`;
-    if (fb) tag = `[[ ${core} | default: '${fb.replace(/'/g,"\\'")}' ]]`;
-    return tag;
-  }
-  function buildDynamicAliasTag(tokens) {
-    const after = tokensAfterFirstIndex(tokens);
-    if (!after) return null;
-    const inner = tokensToPath(after, {stripLeadingDot: true});
-    const fb = fallbackInput.value.trim();
-    let tag = `[[ item.${inner} ]]`;
-    if (fb) tag = `[[ item.${inner} | default: '${fb.replace(/'/g,"\\'")}' ]]`;
-    return tag;
-  }
-  function summarize(val) {
-    if (isScalar(val)) return JSON.stringify(val);
-    if (Array.isArray(val)) return `Array(${val.length})`;
-    return `Object(${Object.keys(val).length})`;
-  }
-
-  function makeNode(label, value, tokens, depth=1) {
-    const li = document.createElement('li');
-    li.className = 'collapsed';
-    li.setAttribute('role', 'treeitem');
-    li.setAttribute('aria-level', String(depth));
-    li.setAttribute('aria-selected', 'false');
-
-    const expandable = !isScalar(value);
-    li.setAttribute('aria-expanded', expandable ? 'false' : 'true');
-
-    const node = document.createElement('div');
-    node.className = 'node';
-    node.tabIndex = -1; // roving tabindex
-
-    const chev = document.createElement('span');
-    chev.className = 'chev';
-    chev.textContent = '▸';
-    if (!expandable) chev.style.visibility = 'hidden';
-
-    const k = document.createElement('span');
-    k.className = 'k';
-    k.innerHTML = esc(label);
-
-    const meta = document.createElement('span');
-    meta.className = 'meta';
-    if (isScalar(value)) {
-      li.classList.remove('collapsed');
-      meta.textContent = summarize(value);
-    } else if (Array.isArray(value)) {
-      meta.textContent = `Array(${value.length})`;
-    } else {
-      meta.textContent = `Object(${Object.keys(value).length})`;
-    }
-
-    node.appendChild(chev);
-    node.appendChild(k);
-    node.appendChild(meta);
-    li.appendChild(node);
-
-    const ul = document.createElement('ul');
-    ul.setAttribute('role', 'group');
-    li.appendChild(ul);
-
-    if (Array.isArray(value)) {
-      value.forEach((v, idx) => {
-        const childTokens = tokens.concat([{t:'index', v: idx}]);
-        ul.appendChild(makeNode(`[${idx}]`, v, childTokens, depth+1));
-        if (isScalar(v)) {
-          leafIndex.push({ pathTokens: childTokens, pathStr: tokensToPath(childTokens, {stripLeadingDot:true}), type: typeof v, sample: v });
-        }
-      });
-    } else if (isObject(value)) {
-      Object.keys(value).sort().forEach(kkey => {
-        const childTokens = tokens.concat([{t:'key', v: kkey}]);
-        ul.appendChild(makeNode(kkey, value[kkey], childTokens, depth+1));
-        if (isScalar(value[kkey])) {
-          leafIndex.push({ pathTokens: childTokens, pathStr: tokensToPath(childTokens, {stripLeadingDot:true}), type: typeof value[kkey], sample: value[kkey] });
-        }
-      });
-    }
-
-    node.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (expandable) {
-        const expanded = li.getAttribute('aria-expanded') === 'true';
-        toggleExpand(li, !expanded);
-      }
-      selectNode(tokens, value, li);
-      focusNode(node);
-    });
-
-    chev.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (expandable) {
-        const expanded = li.getAttribute('aria-expanded') === 'true';
-        toggleExpand(li, !expanded);
-        focusNode(node);
-      }
-    });
-
-
-    node.addEventListener('keydown', (e) => {
-      const key = e.key;
-      const current = li;
-      switch (key) {
-        case 'ArrowRight':
-          e.preventDefault();
-          if (expandable && current.classList.contains('collapsed')) {
-            toggleExpand(current, true);
-            focusNode(node);
-          } else {
-            const firstChild = current.querySelector(':scope > ul > li > .node');
-            if (firstChild) firstChild.focus();
-          }
-          break;
-        case 'ArrowLeft':
-          e.preventDefault();
-          if (expandable && !current.classList.contains('collapsed')) {
-            toggleExpand(current, false);
-            focusNode(node);
-          } else {
-            const parentLi = current.parentElement.closest('li[role="treeitem"]');
-            if (parentLi) parentLi.querySelector(':scope > .node').focus();
-          }
-          break;
-        case 'ArrowDown':
-          e.preventDefault();
-          focusNext(current)?.querySelector(':scope > .node')?.focus();
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          focusPrev(current)?.querySelector(':scope > .node')?.focus();
-          break;
-        case 'Home':
-          e.preventDefault();
-          treeEl.querySelector('li[role="treeitem"] > .node')?.focus();
-          break;
-        case 'End':
-          e.preventDefault();
-          const all = [...treeEl.querySelectorAll('li[role="treeitem"]')];
-          if (all.length) all[all.length - 1].querySelector(':scope > .node').focus();
-          break;
-        case 'Enter':
-        case ' ':
-          e.preventDefault();
-          if (expandable) toggleExpand(current, current.classList.contains('collapsed'));
-          selectNode(tokens, value, li);
-          break;
-      }
-    });
-
-    return li;
-  }
-
-  function focusNode(nodeEl) {
-    treeEl.querySelectorAll('.node[tabindex="0"]').forEach(n => n.tabIndex = -1);
-    nodeEl.tabIndex = 0;
-    nodeEl.focus();
-  }
-
-  function toggleExpand(li, expand=true) {
-    if (expand) {
-      li.classList.remove('collapsed');
-      li.setAttribute('aria-expanded', 'true');
-    } else {
-      li.classList.add('collapsed');
-      li.setAttribute('aria-expanded', 'false');
-    }
-  }
-
-  function focusNext(li) {
-    const items = [...treeEl.querySelectorAll('li[role="treeitem"]')];
-    const i = items.indexOf(li);
-    if (i >= 0 && i < items.length - 1) return items[i+1];
-    return null;
-  }
-  function focusPrev(li) {
-    const items = [...treeEl.querySelectorAll('li[role="treeitem"]')];
-    const i = items.indexOf(li);
-    if (i > 0) return items[i-1];
-    return null;
-  }
-
-  function selectNode(tokens, value, liEl) {
-    treeEl.querySelectorAll('li[role="treeitem"]').forEach(el => {
-      el.classList.remove('selected');
-      el.setAttribute('aria-selected', 'false');
-    });
-    liEl.classList.add('selected');
-    liEl.setAttribute('aria-selected', 'true');
-
-    lastTokens = tokens;
-
-    const path = tokensToPath(tokens, {stripLeadingDot:true});
-    selMeta.innerHTML = `Path: <code>${esc(path)}</code> · Type: <b>${Array.isArray(value) ? 'array' : (isObject(value) ? 'object' : typeof value)}</b>`;
-    dotPathEl.textContent = path;
-    tagEl.textContent = buildTag(tokens);
-    previewEl.textContent = summarize(value);
-    out.style.display = 'grid';
-
-    const dyn = buildDynamicAliasTag(tokens);
-    if (dyn) {
-      dynBox.style.display = '';
-      dynTagEl.textContent = dyn;
-    } else {
-      dynBox.style.display = 'none';
-      dynTagEl.textContent = '';
-    }
-  }
-
-  function buildTree(data) {
-    treeEl.innerHTML = '';
-    leafIndex = [];
-    const rootUl = document.createElement('ul');
-    rootUl.setAttribute('role', 'group');
-    treeEl.appendChild(rootUl);
-
-    if (Array.isArray(data)) {
-      const li = makeNode('root[]', data, []);
-      li.classList.remove('collapsed');
-      li.setAttribute('aria-expanded','true');
-      rootUl.appendChild(li);
-      setTimeout(()=> li.querySelector(':scope > .node').tabIndex = 0, 0);
-    } else if (isObject(data)) {
-      const li = makeNode('root', data, []);
-      li.classList.remove('collapsed');
-      li.setAttribute('aria-expanded','true');
-      rootUl.appendChild(li);
-      setTimeout(()=> li.querySelector(':scope > .node').tabIndex = 0, 0);
-    } else {
-      const li = document.createElement('li');
-      li.setAttribute('role','treeitem');
-      li.setAttribute('aria-level','1');
-      li.innerHTML = `<div class="node leaf" tabindex="0"><span class="chev" style="visibility:hidden">•</span><span class="k">root</span><span class="meta">${summarize(data)}</span></div>`;
-      rootUl.appendChild(li);
-    }
-  }
-
-  function tryParse() {
-    const txt = input.value.trim();
-    if (!txt) { announce('Paste JSON first', true); return; }
-    try {
-      const data = JSON.parse(txt);
-      rootData = data;
-      buildTree(data);
-      out.style.display = 'none';
-      resultsEl.innerHTML = '';
-      announce('JSON parsed ✓');
-      const first = treeEl.querySelector('.node');
-      if (first) focusNode(first);
-    } catch (err) {
-      announce('Invalid JSON: ' + err.message, true);
-      out.style.display = 'none';
-      treeEl.innerHTML = '';
-    }
-  }
-
-
-  document.addEventListener('click', async (e) => {
-    const btn = e.target.closest('.copy');
-    if (!btn) return;
-    const targetId = btn.getAttribute('data-copy');
-    const el = targetId ? document.getElementById(targetId) : null;
-    const text = el ? el.textContent : '';
-    if (!text) return;
-    const ok = await copyToClipboard(text);
-    const original = btn.textContent;
-    btn.textContent = ok ? 'Copied!' : 'Copy failed';
-    copyStatus.textContent = ok
-      ? `${btn.getAttribute('aria-label') || 'Copied value'} to clipboard.`
-      : `Unable to copy. You can select the text and press ⌘/Ctrl+C.`;
-    setTimeout(() => { btn.textContent = original; }, 1200);
-  });
-
-
-  searchBox.addEventListener('input', () => {
-    const q = searchBox.value.trim().toLowerCase();
-    resultsEl.innerHTML = '';
-    if (!q || !leafIndex.length) return;
-    const hits = leafIndex.filter(p => p.pathStr.toLowerCase().includes(q)).slice(0, 50);
-    for (const h of hits) {
-      const div = document.createElement('div');
-      div.className = 'hit';
-      div.setAttribute('role','option');
-      div.setAttribute('tabindex','0');
-      div.innerHTML = `<span class="pill">${esc(typeof h.sample)}</span> <code>${esc(h.pathStr)}</code> <span class="pill">${esc(summarize(h.sample))}</span>`;
-      const choose = () => {
-        selectNode(h.pathTokens, h.sample, treeEl.querySelector('li.selected') || document.createElement('li'));
-        dotPathEl.scrollIntoView({behavior:'smooth', block:'center'});
-      };
-      div.addEventListener('click', choose);
-      div.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); choose(); }});
-      resultsEl.appendChild(div);
-    }
-  });
-
-
-  expandAllBtn.addEventListener('click', () => {
-    treeEl.querySelectorAll('li.collapsed').forEach(li => {
-      li.classList.remove('collapsed');
-      li.setAttribute('aria-expanded','true');
-    });
-  });
-
-
-  [prefixSelect, fallbackInput].forEach(el => el.addEventListener('input', () => {
-    if (!lastTokens) return;
-    tagEl.textContent = buildTag(lastTokens);
-    const dyn = buildDynamicAliasTag(lastTokens);
-    if (dyn) {
-      dynBox.style.display = '';
-      dynTagEl.textContent = dyn;
-    } else {
-      dynBox.style.display = 'none';
-      dynTagEl.textContent = '';
-    }
-  }));
-
-
-  parseBtn.addEventListener('click', tryParse);
-  clearBtn.addEventListener('click', () => {
-    input.value = '';
-    treeEl.innerHTML = '';
-    resultsEl.innerHTML = '';
-    out.style.display = 'none';
-    announce('Cleared');
-    searchBox.value = '';
-  });
-
-
-  contrastBtn.addEventListener('click', () => {
-    const on = bodyEl.classList.toggle('contrast-boost');
-    contrastBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
-
-  input.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault(); tryParse();
-    }
-  });
-})();
-</script>
+<script src="scripts.js"></script>
 </body>
 </html>
