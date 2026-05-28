@@ -18,7 +18,7 @@
   let leafIndex = [];
   let lastTokens = null;
 
-  function announce(msg, isError=false) {
+  function announce(msg, isError = false) {
     if (!liveStatus) return;
     liveStatus.textContent = msg;
     liveStatus.classList.toggle('bad', isError);
@@ -26,7 +26,13 @@
   }
 
   async function copyToClipboard(text) {
-    try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; } } catch (e) {}
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) {}
+
     try {
       const ta = document.createElement('textarea');
       ta.value = text;
@@ -40,38 +46,59 @@
       const ok = document.execCommand('copy');
       document.body.removeChild(ta);
       return ok;
-    } catch (e) { return false; }
+    } catch (e) {
+      return false;
+    }
   }
 
   const isObject = v => v && typeof v === 'object' && !Array.isArray(v);
-  const isScalar = v => (v === null) || (typeof v !== 'object');
+  const isScalar = v => v === null || typeof v !== 'object';
   const isValidIdent = k => /^[A-Za-z_][A-Za-z0-9_]*$/.test(k);
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-  function tokenToString(t) { return t.t === 'key' ? (isValidIdent(t.v) ? '.' + t.v : `['${t.v.replace(/'/g,"\\'")}']`) : `[${t.v}]`; }
-  function tokensToPath(tokens, {stripLeadingDot=false} = {}) {
+  function tokenToString(t) {
+    return t.t === 'key'
+      ? isValidIdent(t.v)
+        ? '.' + t.v
+        : `['${t.v.replace(/'/g, "\\'")}']`
+      : `[${t.v}]`;
+  }
+
+  function tokensToPath(tokens, { stripLeadingDot = false } = {}) {
     if (!tokens || !tokens.length) return '';
     let s = tokens.map(tokenToString).join('');
     if (stripLeadingDot && s.startsWith('.')) s = s.slice(1);
     return s;
   }
+
   function buildTag(tokens) {
     const prefix = prefixSelect.value.trim();
-    const base = tokensToPath(tokens, {stripLeadingDot: true});
+    const base = tokensToPath(tokens, { stripLeadingDot: true });
     const fb = fallbackInput.value.trim();
+
     let core = (prefix ? `${prefix}.` : '') + base;
     let tag = `[[ ${core} ]]`;
-    if (fb) tag = `[[ ${core} | default: '${fb.replace(/'/g,"\\'")}' ]]`;
+
+    if (fb) {
+      tag = `[[ ${core} | default: '${fb.replace(/'/g, "\\'")}' ]]`;
+    }
+
     return tag;
   }
-  function summarize(val) { if (isScalar(val)) return JSON.stringify(val); if (Array.isArray(val)) return `Array(${val.length})`; return `Object(${Object.keys(val).length})`; }
 
-  function makeNode(label, value, tokens, depth=1) {
+  function summarize(val) {
+    if (isScalar(val)) return JSON.stringify(val);
+    if (Array.isArray(val)) return `Array(${val.length})`;
+    return `Object(${Object.keys(val).length})`;
+  }
+
+  function makeNode(label, value, tokens, depth = 1) {
     const li = document.createElement('li');
     li.className = 'collapsed';
     li.setAttribute('role', 'treeitem');
     li.setAttribute('aria-level', String(depth));
     li.setAttribute('aria-selected', 'false');
+    li.dataset.path = tokensToPath(tokens, { stripLeadingDot: true });
 
     const expandable = !isScalar(value);
     li.setAttribute('aria-expanded', expandable ? 'false' : 'true');
@@ -83,6 +110,7 @@
     const chev = document.createElement('span');
     chev.className = 'chev';
     chev.textContent = '▸';
+
     if (!expandable) chev.style.visibility = 'hidden';
 
     const k = document.createElement('span');
@@ -91,9 +119,15 @@
 
     const meta = document.createElement('span');
     meta.className = 'meta';
-    if (isScalar(value)) { li.classList.remove('collapsed'); meta.textContent = summarize(value); }
-    else if (Array.isArray(value)) { meta.textContent = `Array(${value.length})`; }
-    else { meta.textContent = `Object(${Object.keys(value).length})`; }
+
+    if (isScalar(value)) {
+      li.classList.remove('collapsed');
+      meta.textContent = summarize(value);
+    } else if (Array.isArray(value)) {
+      meta.textContent = `Array(${value.length})`;
+    } else {
+      meta.textContent = `Object(${Object.keys(value).length})`;
+    }
 
     node.appendChild(chev);
     node.appendChild(k);
@@ -106,30 +140,49 @@
 
     if (Array.isArray(value)) {
       value.forEach((v, idx) => {
-        const childTokens = tokens.concat([{t:'index', v: idx}]);
-        ul.appendChild(makeNode(`[${idx}]`, v, childTokens, depth+1));
-        if (isScalar(v)) { leafIndex.push({ pathTokens: childTokens, pathStr: tokensToPath(childTokens, {stripLeadingDot:true}), type: typeof v, sample: v }); }
+        const childTokens = tokens.concat([{ t: 'index', v: idx }]);
+        ul.appendChild(makeNode(`[${idx}]`, v, childTokens, depth + 1));
+
+        if (isScalar(v)) {
+          leafIndex.push({
+            pathTokens: childTokens,
+            pathStr: tokensToPath(childTokens, { stripLeadingDot: true }),
+            type: typeof v,
+            sample: v
+          });
+        }
       });
     } else if (isObject(value)) {
       Object.keys(value).sort().forEach(kkey => {
-        const childTokens = tokens.concat([{t:'key', v: kkey}]);
-        ul.appendChild(makeNode(kkey, value[kkey], childTokens, depth+1));
-        if (isScalar(value[kkey])) { leafIndex.push({ pathTokens: childTokens, pathStr: tokensToPath(childTokens, {stripLeadingDot:true}), type: typeof value[kkey], sample: value[kkey] }); }
+        const childTokens = tokens.concat([{ t: 'key', v: kkey }]);
+        ul.appendChild(makeNode(kkey, value[kkey], childTokens, depth + 1));
+
+        if (isScalar(value[kkey])) {
+          leafIndex.push({
+            pathTokens: childTokens,
+            pathStr: tokensToPath(childTokens, { stripLeadingDot: true }),
+            type: typeof value[kkey],
+            sample: value[kkey]
+          });
+        }
       });
     }
 
-    node.addEventListener('click', (e) => {
+    node.addEventListener('click', e => {
       e.stopPropagation();
+
       if (expandable) {
         const expanded = li.getAttribute('aria-expanded') === 'true';
         toggleExpand(li, !expanded);
       }
+
       selectNode(tokens, value, li);
       focusNode(node);
     });
 
-    chev.addEventListener('click', (e) => {
+    chev.addEventListener('click', e => {
       e.stopPropagation();
+
       if (expandable) {
         const expanded = li.getAttribute('aria-expanded') === 'true';
         toggleExpand(li, !expanded);
@@ -137,41 +190,66 @@
       }
     });
 
-    node.addEventListener('keydown', (e) => {
+    node.addEventListener('keydown', e => {
       const key = e.key;
       const current = li;
+
       switch (key) {
         case 'ArrowRight':
           e.preventDefault();
-          if (expandable && current.classList.contains('collapsed')) { toggleExpand(current, true); focusNode(node); }
-          else { const firstChild = current.querySelector(':scope > ul > li > .node'); if (firstChild) firstChild.focus(); }
+
+          if (expandable && current.classList.contains('collapsed')) {
+            toggleExpand(current, true);
+            focusNode(node);
+          } else {
+            const firstChild = current.querySelector(':scope > ul > li > .node');
+            if (firstChild) firstChild.focus();
+          }
+
           break;
+
         case 'ArrowLeft':
           e.preventDefault();
-          if (expandable && !current.classList.contains('collapsed')) { toggleExpand(current, false); focusNode(node); }
-          else { const parentLi = current.parentElement.closest('li[role="treeitem"]'); if (parentLi) parentLi.querySelector(':scope > .node').focus(); }
+
+          if (expandable && !current.classList.contains('collapsed')) {
+            toggleExpand(current, false);
+            focusNode(node);
+          } else {
+            const parentLi = current.parentElement.closest('li[role="treeitem"]');
+            if (parentLi) parentLi.querySelector(':scope > .node').focus();
+          }
+
           break;
+
         case 'ArrowDown':
           e.preventDefault();
           focusNext(current)?.querySelector(':scope > .node')?.focus();
           break;
+
         case 'ArrowUp':
           e.preventDefault();
           focusPrev(current)?.querySelector(':scope > .node')?.focus();
           break;
+
         case 'Home':
           e.preventDefault();
           treeEl.querySelector('li[role="treeitem"] > .node')?.focus();
           break;
+
         case 'End':
           e.preventDefault();
           const all = [...treeEl.querySelectorAll('li[role="treeitem"]')];
           if (all.length) all[all.length - 1].querySelector(':scope > .node').focus();
           break;
+
         case 'Enter':
         case ' ':
           e.preventDefault();
-          if (expandable) toggleExpand(current, current.classList.contains('collapsed'));
+
+          if (expandable) {
+            toggleExpand(current, current.classList.contains('collapsed'));
+          }
+
           selectNode(tokens, value, li);
           break;
       }
@@ -181,21 +259,42 @@
   }
 
   function focusNode(nodeEl) {
-    treeEl.querySelectorAll('.node[tabindex="0"]').forEach(n => n.tabIndex = -1);
+    treeEl.querySelectorAll('.node[tabindex="0"]').forEach(n => {
+      n.tabIndex = -1;
+    });
+
     nodeEl.tabIndex = 0;
     nodeEl.focus();
   }
 
-  function toggleExpand(li, expand=true) {
-    if (expand) { li.classList.remove('collapsed'); li.setAttribute('aria-expanded', 'true'); }
-    else { li.classList.add('collapsed'); li.setAttribute('aria-expanded', 'false'); }
+  function toggleExpand(li, expand = true) {
+    if (expand) {
+      li.classList.remove('collapsed');
+      li.setAttribute('aria-expanded', 'true');
+    } else {
+      li.classList.add('collapsed');
+      li.setAttribute('aria-expanded', 'false');
+    }
   }
 
-  function focusNext(li) { const items = [...treeEl.querySelectorAll('li[role="treeitem"]')]; const i = items.indexOf(li); return (i >= 0 && i < items.length - 1) ? items[i+1] : null; }
-  function focusPrev(li) { const items = [...treeEl.querySelectorAll('li[role="treeitem"]')]; const i = items.indexOf(li); return i > 0 ? items[i-1] : null; }
+  function focusNext(li) {
+    const items = [...treeEl.querySelectorAll('li[role="treeitem"]')];
+    const i = items.indexOf(li);
+    return i >= 0 && i < items.length - 1 ? items[i + 1] : null;
+  }
+
+  function focusPrev(li) {
+    const items = [...treeEl.querySelectorAll('li[role="treeitem"]')];
+    const i = items.indexOf(li);
+    return i > 0 ? items[i - 1] : null;
+  }
 
   function selectNode(tokens, value, liEl) {
-    treeEl.querySelectorAll('li[role="treeitem"]').forEach(el => { el.classList.remove('selected'); el.setAttribute('aria-selected', 'false'); });
+    treeEl.querySelectorAll('li[role="treeitem"]').forEach(el => {
+      el.classList.remove('selected');
+      el.setAttribute('aria-selected', 'false');
+    });
+
     liEl.classList.add('selected');
     liEl.setAttribute('aria-selected', 'true');
 
@@ -204,13 +303,36 @@
     tagEl.textContent = buildTag(tokens);
     previewEl.textContent = summarize(value);
     out.style.display = 'grid';
+
     out.classList.add('animate-pop');
     setTimeout(() => out.classList.remove('animate-pop'), 220);
+  }
+
+  function getTreeItemByTokens(tokens) {
+    const path = tokensToPath(tokens, { stripLeadingDot: true });
+    return treeEl.querySelector(`li[data-path="${CSS.escape(path)}"]`);
+  }
+
+  function revealTreeItem(tokens) {
+    const targetLi = getTreeItemByTokens(tokens);
+    if (!targetLi) return null;
+
+    let parent = targetLi.parentElement.closest('li[role="treeitem"]');
+
+    while (parent) {
+      toggleExpand(parent, true);
+      parent = parent.parentElement.closest('li[role="treeitem"]');
+    }
+
+    toggleExpand(targetLi, true);
+
+    return targetLi;
   }
 
   function buildTree(data) {
     treeEl.innerHTML = '';
     leafIndex = [];
+
     const rootUl = document.createElement('ul');
     rootUl.setAttribute('role', 'group');
     treeEl.appendChild(rootUl);
@@ -218,19 +340,26 @@
     if (Array.isArray(data)) {
       const li = makeNode('root[]', data, []);
       li.classList.remove('collapsed');
-      li.setAttribute('aria-expanded','true');
+      li.setAttribute('aria-expanded', 'true');
       rootUl.appendChild(li);
-      setTimeout(()=> li.querySelector(':scope > .node').tabIndex = 0, 0);
+
+      setTimeout(() => {
+        li.querySelector(':scope > .node').tabIndex = 0;
+      }, 0);
     } else if (isObject(data)) {
       const li = makeNode('root', data, []);
       li.classList.remove('collapsed');
-      li.setAttribute('aria-expanded','true');
+      li.setAttribute('aria-expanded', 'true');
       rootUl.appendChild(li);
-      setTimeout(()=> li.querySelector(':scope > .node').tabIndex = 0, 0);
+
+      setTimeout(() => {
+        li.querySelector(':scope > .node').tabIndex = 0;
+      }, 0);
     } else {
       const li = document.createElement('li');
-      li.setAttribute('role','treeitem');
-      li.setAttribute('aria-level','1');
+      li.setAttribute('role', 'treeitem');
+      li.setAttribute('aria-level', '1');
+      li.dataset.path = '';
       li.innerHTML = `<div class="node" tabindex="0"><span class="chev" style="visibility:hidden">•</span><span class="k">root</span><span class="meta">${summarize(data)}</span></div>`;
       rootUl.appendChild(li);
     }
@@ -238,13 +367,21 @@
 
   function tryParse() {
     const txt = input.value.trim();
-    if (!txt) { announce('Paste JSON first', true); return; }
+
+    if (!txt) {
+      announce('Paste JSON first', true);
+      return;
+    }
+
     try {
       const data = JSON.parse(txt);
       buildTree(data);
+
       out.style.display = 'none';
       resultsEl.innerHTML = '';
+
       announce('JSON parsed ✓');
+
       const first = treeEl.querySelector('.node');
       if (first) first.focus();
     } catch (err) {
@@ -254,61 +391,120 @@
     }
   }
 
-  document.addEventListener('click', async (e) => {
+  document.addEventListener('click', async e => {
     const btn = e.target.closest('.copy');
     if (!btn) return;
+
     const targetId = btn.getAttribute('data-copy');
     const el = targetId ? document.getElementById(targetId) : null;
     const text = el ? el.textContent : '';
+
     if (!text) return;
+
     const ok = await copyToClipboard(text);
     const original = btn.textContent;
+
     btn.textContent = ok ? 'Copied!' : 'Copy failed';
     btn.classList.add('animate-pop');
+
     setTimeout(() => btn.classList.remove('animate-pop'), 220);
-    if (copyStatus) { copyStatus.textContent = ok ? `${btn.getAttribute('aria-label') || 'Copied value'} to clipboard.` : `Unable to copy. You can select the text and press ⌘/Ctrl+C.`; }
-    setTimeout(() => { btn.textContent = original; }, 1200);
+
+    if (copyStatus) {
+      copyStatus.textContent = ok
+        ? `${btn.getAttribute('aria-label') || 'Copied value'} to clipboard.`
+        : `Unable to copy. You can select the text and press ⌘/Ctrl+C.`;
+    }
+
+    setTimeout(() => {
+      btn.textContent = original;
+    }, 1200);
   });
 
   searchBox.addEventListener('input', () => {
     const q = searchBox.value.trim().toLowerCase();
+
     resultsEl.innerHTML = '';
+
     if (!q || !leafIndex.length) return;
+
     const hits = [];
+
     for (const p of leafIndex) {
       const keyHit = p.pathStr.toLowerCase().includes(q);
       const valStr = p.sample === null ? 'null' : String(p.sample);
       const valHit = valStr.toLowerCase().includes(q);
+
       if (keyHit || valHit) hits.push({ ...p, keyHit, valStr });
       if (hits.length >= 100) break;
     }
+
     for (const h of hits) {
       const div = document.createElement('div');
+
       div.className = 'hit rounded-lg px-2 py-2 text-sm transition hover:bg-sky-500/10 cursor-pointer flex items-center gap-2';
-      div.setAttribute('role','option');
-      div.setAttribute('tabindex','0');
+      div.setAttribute('role', 'option');
+      div.setAttribute('tabindex', '0');
+
       const badge = h.keyHit ? 'key' : 'value';
-      div.innerHTML = `<span style="font-size:.7rem;color:var(--muted);border:1px solid rgba(148,163,184,.25);border-radius:999px;padding:0 .5rem">${badge}</span><code>${esc(h.pathStr)}</code><span style="font-size:.7rem;color:var(--muted);border:1px solid rgba(148,163,184,.25);border-radius:999px;padding:0 .5rem;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.valStr)}</span>`;
+
+      div.innerHTML = `
+        <span style="font-size:.7rem;color:var(--muted);border:1px solid rgba(148,163,184,.25);border-radius:999px;padding:0 .5rem">${badge}</span>
+        <code>${esc(h.pathStr)}</code>
+        <span style="font-size:.7rem;color:var(--muted);border:1px solid rgba(148,163,184,.25);border-radius:999px;padding:0 .5rem;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.valStr)}</span>
+      `;
+
       const choose = () => {
-        selectNode(h.pathTokens, h.sample, treeEl.querySelector('li.selected') || document.createElement('li'));
-        tagEl.scrollIntoView({behavior:'smooth', block:'center'});
+        const targetLi = revealTreeItem(h.pathTokens);
+
+        if (targetLi) {
+          selectNode(h.pathTokens, h.sample, targetLi);
+
+          const nodeEl = targetLi.querySelector(':scope > .node');
+
+          if (nodeEl) {
+            focusNode(nodeEl);
+
+            nodeEl.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center'
+            });
+          }
+        } else {
+          tagEl.textContent = buildTag(h.pathTokens);
+          previewEl.textContent = summarize(h.sample);
+          out.style.display = 'grid';
+        }
       };
+
       div.addEventListener('click', choose);
-      div.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); choose(); }});
+
+      div.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          choose();
+        }
+      });
+
       resultsEl.appendChild(div);
     }
   });
 
   expandAllBtn.addEventListener('click', () => {
-    treeEl.querySelectorAll('li.collapsed').forEach(li => { li.classList.remove('collapsed'); li.setAttribute('aria-expanded','true'); });
+    treeEl.querySelectorAll('li.collapsed').forEach(li => {
+      li.classList.remove('collapsed');
+      li.setAttribute('aria-expanded', 'true');
+    });
   });
 
-  [prefixSelect, fallbackInput].forEach(el => el.addEventListener('input', () => {
-    if (!lastTokens) return;
-    tagEl.textContent = buildTag(lastTokens);
-  }));
+  [prefixSelect, fallbackInput].forEach(el =>
+    el.addEventListener('input', () => {
+      if (!lastTokens) return;
+      tagEl.textContent = buildTag(lastTokens);
+    })
+  );
 
   parseBtn.addEventListener('click', tryParse);
+
   clearBtn.addEventListener('click', () => {
     input.value = '';
     treeEl.innerHTML = '';
@@ -321,16 +517,23 @@
   themeBtn.addEventListener('click', () => {
     const root = document.documentElement;
     const nowDark = root.classList.toggle('dark');
+
     localStorage.setItem('theme', nowDark ? 'dark' : 'light');
+
     const sun = document.getElementById('iconSun');
     const moon = document.getElementById('iconMoon');
+
     sun.classList.toggle('hidden', nowDark);
     moon.classList.toggle('hidden', !nowDark);
+
     themeBtn.classList.add('animate-pop');
     setTimeout(() => themeBtn.classList.remove('animate-pop'), 220);
   });
 
-  input.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); tryParse(); }
+  input.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      tryParse();
+    }
   });
 })();
