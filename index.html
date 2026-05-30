@@ -7,6 +7,7 @@
 <link rel="icon" href="https://www.omnisend.com/wp-content/uploads/2022/07/cropped-favi-32x32.png" sizes="32x32">
 <link rel="icon" href="https://www.omnisend.com/wp-content/uploads/2022/07/cropped-favi-192x192.png" sizes="192x192">
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="./styles/styles.css" />
 <script>
   tailwind.config = {
     darkMode: 'class',
@@ -20,46 +21,57 @@
           textmuted: { light: '#5b677a', dark: '#a8b3c1' },
           brand: { light: '#0ea5a6', dark: '#22d3ee' }
         },
-        boxShadow: { soft: '0 6px 24px rgba(0,0,0,.10)', glass: '0 16px 40px rgba(0,0,0,.25)' },
+        boxShadow: {
+          soft: '0 10px 30px rgba(15,23,42,.08)',
+          glass: '0 24px 80px rgba(0,0,0,.30)'
+        },
         borderRadius: { xl2: '1.1rem' },
         keyframes: {
-          fadeSlide: { '0%': { opacity: 0, transform: 'translateY(8px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
-          pop: { '0%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.03)' }, '100%': { transform: 'scale(1)' } }
+          fadeSlide: {
+            '0%': { opacity: 0, transform: 'translateY(8px)' },
+            '100%': { opacity: 1, transform: 'translateY(0)' }
+          },
+          pop: {
+            '0%': { transform: 'scale(1)' },
+            '50%': { transform: 'scale(1.03)' },
+            '100%': { transform: 'scale(1)' }
+          }
         },
-        animation: { fadeSlide: 'fadeSlide .35s ease both', pop: 'pop .18s ease-out' }
+        animation: {
+          fadeSlide: 'fadeSlide .35s ease both',
+          pop: 'pop .18s ease-out'
+        }
       }
     }
   }
 </script>
-<style>
-  :root { --hover: rgba(14,165,233,.10); --selected: rgba(14,165,233,.18); --muted: #94a3b8; --ok: #16a34a; --bad: #ef4444 }
-  .tree { max-height: min(65vh, 680px); overflow: auto }
-  .tree ul { list-style: none; margin: 0; padding-left: 1rem }
-  .tree li { margin: .15rem 0; position: relative }
-  .tree .node { display: inline-flex; align-items: center; gap: .5rem; cursor: pointer; padding: .5rem .6rem; border-radius: .6rem; transition: background .15s ease, transform .15s ease }
-  .tree .node:hover { background: var(--hover); transform: translateX(1px) }
-  .node .chev { width: 14px; text-align: center; opacity: .85; transition: transform .15s ease }
-  .node .k { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace }
-  .node .meta { font-size: .72rem; color: var(--muted); padding: .12rem .5rem; border: 1px solid rgba(148,163,184,.25); border-radius: 999px }
-  .collapsed > ul { display: none }
-  .collapsed > .node .chev { transform: rotate(-90deg) }
-  .selected .node { background: var(--selected) }
-  .status { font-size: .85rem; color: var(--muted) }
-  .status.good { color: var(--ok) }
-  .status.bad { color: var(--bad) }
-</style>
 </head>
-<body class="min-h-screen bg-surface-light text-textpri-light antialiased selection:bg-brand-light/20 dark:bg-surface-dark dark:text-textpri-dark">
-  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:bg-card-light dark:focus:bg-card-dark focus:text-textpri-light dark:focus:text-textpri-dark focus:ring-2 focus:ring-brand-light focus:px-3 focus:py-2 rounded">Skip to main content</a>
 
-  <header class="border-b border-edge-light bg-card-light/80 backdrop-blur dark:border-edge-dark dark:bg-card-dark/60">
-    <div class="mx-auto max-w-7xl px-4 py-4 grid grid-cols-1 md:grid-cols-[1fr_auto] items-center gap-3">
-      <div class="flex items-center gap-3">
-        <h1 id="app-title" class="text-xl md:text-2xl font-extrabold tracking-tight">Omnisend Personalization Path Builder</h1>
-        <span aria-hidden="true" class="text-slate-950 dark:text-slate-900 font-bold text-[11px] px-2 py-[2px] rounded-full bg-gradient-to-r from-brand-light to-emerald-400">[[ … ]]</span>
+<body class="min-h-screen bg-surface-light text-textpri-light antialiased selection:bg-brand-light/20 dark:bg-surface-dark dark:text-textpri-dark">
+  <a href="#mainView" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:bg-card-light dark:focus:bg-card-dark focus:text-textpri-light dark:focus:text-textpri-dark focus:ring-2 focus:ring-brand-light focus:px-3 focus:py-2 rounded">Skip to main content</a>
+
+  <header class="sticky top-0 z-40 border-b border-edge-light bg-card-light/85 backdrop-blur-xl dark:border-edge-dark dark:bg-card-dark/75">
+    <div class="mx-auto max-w-7xl px-4 py-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-3">
+          <h1 id="app-title" class="text-xl md:text-2xl font-extrabold tracking-tight">Omnisend Personalization Path Builder</h1>
+          <span aria-hidden="true" class="text-slate-950 dark:text-slate-900 font-bold text-[11px] px-2 py-[2px] rounded-full bg-gradient-to-r from-brand-light to-emerald-400">[[ … ]]</span>
+          <span id="payloadStatusPill" class="status-pill">No payload loaded</span>
+        </div>
+        <p class="mt-1 text-sm text-textmuted-light dark:text-textmuted-dark">Find JSON fields, build Omnisend tags, validate tags, and compare event payloads.</p>
       </div>
-      <div class="flex justify-start md:justify-end">
-        <button id="themeBtn" type="button" class="inline-flex items-center justify-center rounded-full border border-edge-light bg-card-light p-2.5 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition">
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="helpBtn" type="button" class="inline-flex items-center gap-2 rounded-full border border-cyan-500/40 bg-cyan-500/10 px-4 py-2.5 text-sm font-bold text-cyan-700 hover:bg-cyan-500/15 focus:outline-none focus:ring-2 focus:ring-brand-light dark:text-cyan-200 transition">
+          <span aria-hidden="true">?</span>
+          Help me
+        </button>
+
+        <button id="compareModeBtn" type="button" class="inline-flex items-center justify-center rounded-full border border-edge-light bg-card-light px-4 py-2.5 text-sm font-semibold hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" aria-pressed="false">
+          Compare Payloads
+        </button>
+
+        <button id="themeBtn" type="button" class="inline-flex items-center justify-center rounded-full border border-edge-light bg-card-light p-2.5 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" aria-label="Toggle theme">
           <svg id="iconSun" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500 dark:hidden transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364-1.414 1.414M7.05 16.95l-1.414 1.414m12.728 0-1.414-1.414M7.05 7.05 5.636 5.636M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
           <svg id="iconMoon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-400 hidden dark:block transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
         </button>
@@ -67,80 +79,318 @@
     </div>
   </header>
 
-  <main id="main" class="mx-auto max-w-7xl px-4 py-5 grid gap-4 lg:grid-cols-[minmax(340px,420px)_1fr]">
-    <section class="rounded-2xl border border-edge-light bg-card-light shadow-soft dark:border-edge-dark dark:bg-card-dark animate-fadeSlide">
-      <h2 class="m-0 px-4 py-3 text-sm text-textmuted-light bg-surface-light border-b border-edge-light dark:text-textmuted-dark dark:bg-surface-dark dark:border-edge-dark">How to use</h2>
-      <div class="p-4">
-        <ol class="list-decimal pl-5 grid gap-2 text-[15px]">
-          <li>Paste your event JSON and press JSON Breakdown or use Ctrl/⌘+Enter.</li>
-          <li>Select a field in the Tree or search by key or value below.</li>
-          <li> Check or Copy the Omnisend tag or preview value.</li>
-        </ol>
-      </div>
-    </section>
-
-    <section class="rounded-2xl border border-edge-light bg-card-light shadow-soft dark:border-edge-dark dark:bg-card-dark animate-fadeSlide">
-      <h2 class="m-0 px-4 py-3 text-sm text-textmuted-light bg-surface-light border-b border-edge-light dark:text-textmuted-dark dark:bg-surface-dark dark:border-edge-dark">1) Paste JSON</h2>
-      <div class="p-4">
-        <label for="jsonInput" class="sr-only">Event JSON input</label>
-        <textarea id="jsonInput" spellcheck="false" placeholder='Paste your event JSON here (e.g., {"raw":{...}})' aria-describedby="json-help" class="w-full min-h-[260px] rounded-xl border border-edge-light bg-surface-light px-3.5 py-3 text-[15px] placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-surface-dark transition"></textarea>
-
-        <div class="mt-3 grid gap-2 sm:grid-cols-2">
-          <button id="parseBtn" type="button" class="rounded-xl border border-cyan-600/50 bg-gradient-to-r from-cyan-600 to-cyan-500 px-4 py-3 text-sm font-semibold tracking-wide text-white hover:from-cyan-500 hover:to-cyan-400 focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] transition">JSON Breakdown</button>
-          <button id="clearBtn" type="button" title="Clear input and tree" class="rounded-xl border border-edge-light bg-card-light px-4 py-3 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition">Clear</button>
-          <select id="prefixSelect" aria-label="Tag prefix" title="Which variable to prefix in the tag" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.99] dark:border-edge-dark dark:bg-surface-dark transition">
-            <option value="event" selected>Tag prefix: event</option>
-            <option value="">Tag prefix: (none)</option>
-          </select>
-          <input id="fallbackInput" type="text" placeholder="Optional fallback, e.g. there" title="Adds | default: 'value'" aria-label="Optional fallback value" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.99] dark:border-edge-dark dark:bg-surface-dark transition"/>
-        </div>
-        <p id="live-status" class="status mt-2"></p>
-        <p id="copy-status" class="status mt-1"></p>
-      </div>
-    </section>
-
-    <section class="lg:col-span-2 rounded-2xl border border-edge-light bg-card-light shadow-soft dark:border-edge-dark dark:bg-card-dark animate-fadeSlide">
-      <h2 class="m-0 px-4 py-3 text-sm text-textmuted-light bg-surface-light border-b border-edge-light dark:text-textmuted-dark dark:bg-surface-dark dark:border-edge-dark">2) Pick a field → get the tag</h2>
-
-      <div class="p-4">
-        <div id="out" style="display:none;" class="grid gap-4 md:grid-cols-2 mb-6">
-          <div class="space-y-1 animate-fadeSlide">
-            <div class="text-sm text-textmuted-light dark:text-textmuted-dark">Omnisend tag</div>
-            <div id="tag" role="textbox" aria-readonly="true" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2 font-mono text-sm break-words dark:border-edge-dark dark:bg-surface-dark"></div>
-            <button class="copy mt-1 rounded-xl border border-edge-light bg-card-light px-3 py-2 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" data-copy="tag" type="button" aria-label="Copy Omnisend tag">Copy tag</button>
-          </div>
-
-          <div class="space-y-1 animate-fadeSlide">
-            <div class="text-sm text-textmuted-light dark:text-textmuted-dark">Preview value</div>
-            <div id="preview" role="textbox" aria-readonly="true" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2 font-mono text-sm break-words dark:border-edge-dark dark:bg-surface-dark"></div>
-            <button class="copy mt-1 rounded-xl border border-edge-light bg-card-light px-3 py-2 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" data-copy="preview" type="button" aria-label="Copy preview value">Copy value</button>
-          </div>
-        </div>
-
-        <div class="pt-4 border-t border-edge-light dark:border-edge-dark grid gap-4 lg:grid-cols-[minmax(260px,360px)_1fr] items-start">
+  <main id="mainView" class="mx-auto max-w-7xl px-4 py-5 space-y-5">
+    <section class="grid gap-3 md:grid-cols-3" aria-label="Primary workflow">
+      <div class="card p-4">
+        <div class="section-title">
+          <span class="step-badge">1</span>
           <div>
-            <label for="searchBox" class="block text-sm text-textmuted-light dark:text-textmuted-dark mb-2">Quick search (keys or values)</label>
-            <div class="grid grid-cols-[1fr_auto] gap-2">
-              <input id="searchBox" type="search" placeholder="Search keys (e.g., line_items, email, city) or values:( Midweight shirt, example@example.com)" aria-controls="results" class="rounded-xl border border-edge-light bg-surface-light px-3.5 py-2.5 text-sm placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-surface-dark transition"/>
-              <button id="expandAll" type="button" title="Expand all nodes" class="rounded-xl border border-edge-light bg-card-light px-3 py-2.5 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition">Expand all</button>
+            <h2 class="font-bold">Load payload</h2>
+            <p class="text-sm text-textmuted-light dark:text-textmuted-dark">Paste valid JSON. It auto-parses.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-4">
+        <div class="section-title">
+          <span class="step-badge">2</span>
+          <div>
+            <h2 class="font-bold">Find a field</h2>
+            <p class="text-sm text-textmuted-light dark:text-textmuted-dark">Use search, tree, or field checker.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-4">
+        <div class="section-title">
+          <span class="step-badge">3</span>
+          <div>
+            <h2 class="font-bold">Copy or validate</h2>
+            <p class="text-sm text-textmuted-light dark:text-textmuted-dark">Copy tags or test tags in bulk.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid gap-5 xl:grid-cols-[minmax(360px,480px)_1fr]">
+      <div class="card animate-fadeSlide">
+        <div class="card-header">
+          <div class="section-title">
+            <span class="step-badge">1</span>
+            <div>
+              <h2 class="font-bold">Load your JSON payload</h2>
+              <p class="text-sm text-textmuted-light dark:text-textmuted-dark">Paste an event payload. Invalid JSON shows line, column, and a pointer.</p>
             </div>
-            <div id="results" role="listbox" aria-label="Search results" class="mt-2 max-h-64 overflow-auto rounded-xl border border-edge-light bg-surface-light p-2 dark:border-edge-dark dark:bg-surface-dark"></div>
+          </div>
+        </div>
+
+        <div class="p-4">
+          <label for="jsonInput" class="sr-only">Event JSON input</label>
+          <textarea id="jsonInput" spellcheck="false" placeholder='Paste your event JSON here, for example: {"raw":{"order_number":"123456"}}' aria-describedby="json-help" class="w-full min-h-[320px] rounded-xl border border-edge-light bg-surface-light px-3.5 py-3 text-[15px] font-mono placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-surface-dark transition"></textarea>
+
+          <div class="mt-3 grid gap-2 sm:grid-cols-2">
+            <button id="parseBtn" type="button" class="rounded-xl border border-cyan-600/50 bg-gradient-to-r from-cyan-600 to-cyan-500 px-4 py-3 text-sm font-semibold tracking-wide text-white hover:from-cyan-500 hover:to-cyan-400 focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] transition">JSON Breakdown</button>
+
+            <button id="clearBtn" type="button" title="Clear input and tree" class="rounded-xl border border-edge-light bg-card-light px-4 py-3 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition">Clear</button>
+
+            <select id="prefixSelect" aria-label="Tag prefix" title="Which variable to prefix in the tag" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.99] dark:border-edge-dark dark:bg-surface-dark transition">
+              <option value="event" selected>Tag prefix: event</option>
+              <option value="">Tag prefix: none</option>
+            </select>
+
+            <input id="fallbackInput" type="text" placeholder="Optional fallback, e.g. there" title="Adds | default: 'value'" aria-label="Optional fallback value" class="rounded-xl border border-edge-light bg-surface-light px-3 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.99] dark:border-edge-dark dark:bg-surface-dark transition"/>
           </div>
 
-          <div>
-            <label for="tree" class="block text-sm text-textmuted-light dark:text-textmuted-dark mb-2">Tree</label>
-            <div id="tree" role="tree" aria-label="JSON tree" class="tree rounded-xl border border-edge-light bg-surface-light p-2 dark:border-edge-dark dark:bg-surface-dark"></div>
-          </div>
+          <p id="live-status" class="status mt-3" aria-live="polite"></p>
+          <p id="copy-status" class="status mt-1" aria-live="polite"></p>
         </div>
       </div>
 
-      <div class="px-4 py-3 text-[12px] text-textmuted-light border-t border-edge-light dark:text-textmuted-dark dark:border-edge-dark">
-        Heads-up: Omnisend personalization uses double square brackets (e.g., <code class="text-emerald-700 dark:text-emerald-300">[[ contact.first_name ]]</code>) and supports Liquid filters like <code class="text-emerald-700 dark:text-emerald-300">| default:</code>.
+      <div class="space-y-5">
+        <section class="card animate-fadeSlide">
+          <div class="card-header">
+            <div class="section-title">
+              <span class="step-badge">2</span>
+              <div>
+                <h2 class="font-bold">Build and check tags</h2>
+                <p class="text-sm text-textmuted-light dark:text-textmuted-dark">Select a tree field or paste a path/tag to confirm it exists.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 space-y-4">
+            <div id="out" style="display:none;" class="grid gap-4 md:grid-cols-2">
+              <div class="space-y-1 animate-fadeSlide rounded-xl border border-edge-light bg-surface-light p-3 dark:border-edge-dark dark:bg-surface-dark">
+                <div class="text-sm font-semibold text-textmuted-light dark:text-textmuted-dark">Generated Omnisend tag</div>
+                <div id="tag" role="textbox" aria-readonly="true" class="rounded-lg border border-edge-light bg-card-light px-3 py-2 font-mono text-sm break-words dark:border-edge-dark dark:bg-card-dark"></div>
+                <button class="copy mt-1 rounded-xl border border-edge-light bg-card-light px-3 py-2 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" data-copy="tag" type="button" aria-label="Copy Omnisend tag">Copy tag</button>
+              </div>
+
+              <div class="space-y-1 animate-fadeSlide rounded-xl border border-edge-light bg-surface-light p-3 dark:border-edge-dark dark:bg-surface-dark">
+                <div class="text-sm font-semibold text-textmuted-light dark:text-textmuted-dark">Preview value</div>
+                <div id="preview" role="textbox" aria-readonly="true" class="rounded-lg border border-edge-light bg-card-light px-3 py-2 font-mono text-sm break-words dark:border-edge-dark dark:bg-card-dark"></div>
+                <button class="copy mt-1 rounded-xl border border-edge-light bg-card-light px-3 py-2 text-sm hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" data-copy="preview" type="button" aria-label="Copy preview value">Copy value</button>
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-edge-light bg-surface-light p-3 dark:border-edge-dark dark:bg-surface-dark">
+              <label for="fieldCheckInput" class="block text-sm font-bold mb-1">Does this field exist?</label>
+              <p class="text-xs text-textmuted-light dark:text-textmuted-dark mb-2">Check <code>raw.order_number</code> or a full tag like <code>[[ event.raw.order_number ]]</code>.</p>
+
+              <div class="grid gap-2 md:grid-cols-[1fr_auto]">
+                <input id="fieldCheckInput" type="text" placeholder="raw.order_number or [[ event.raw.order_number ]]" class="rounded-xl border border-edge-light bg-card-light px-3.5 py-2.5 text-sm placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-card-dark transition" disabled />
+                <button id="fieldCheckBtn" type="button" class="rounded-xl border border-edge-light bg-card-light px-4 py-2.5 text-sm font-semibold hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" disabled>Check</button>
+              </div>
+
+              <div id="fieldCheckResult" class="status mt-2">Parse a JSON payload first to check fields.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card animate-fadeSlide">
+          <div class="card-header">
+            <div class="section-title">
+              <span class="step-badge">3</span>
+              <div>
+                <h2 class="font-bold">Explore the payload</h2>
+                <p class="text-sm text-textmuted-light dark:text-textmuted-dark">Search by key/value or browse the interactive tree.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 explore-layout">
+            <aside class="explore-search-panel">
+              <label for="searchBox" class="block text-sm font-semibold text-textmuted-light dark:text-textmuted-dark mb-2">
+                Quick search
+              </label>
+
+              <input
+                id="searchBox"
+                type="search"
+                placeholder="Search keys or values"
+                aria-controls="results"
+                class="w-full rounded-xl border border-edge-light bg-surface-light px-3.5 py-2.5 text-sm placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-surface-dark transition"
+              />
+
+              <div class="search-actions">
+                <button
+                  id="expandAll"
+                  type="button"
+                  title="Expand all nodes"
+                  class="rounded-xl border border-edge-light bg-card-light px-3 py-2.5 text-sm font-semibold hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition"
+                >
+                  Expand all tree nodes
+                </button>
+              </div>
+
+              <p class="mt-2 text-xs text-textmuted-light dark:text-textmuted-dark">
+                Click a result to reveal and highlight it in the tree.
+              </p>
+
+              <div
+                id="results"
+                role="listbox"
+                aria-label="Search results"
+                class="search-results mt-2 max-h-72 rounded-xl border border-edge-light bg-surface-light p-2 dark:border-edge-dark dark:bg-surface-dark"
+              ></div>
+            </aside>
+
+            <div class="explore-tree-panel">
+              <label for="tree" class="block text-sm font-semibold text-textmuted-light dark:text-textmuted-dark mb-2">
+                JSON tree
+              </label>
+
+              <div
+                id="tree"
+                role="tree"
+                aria-label="JSON tree"
+                class="tree rounded-xl border border-edge-light bg-surface-light p-2 dark:border-edge-dark dark:bg-surface-dark"
+              ></div>
+            </div>
+          </div>
+        </section>
       </div>
+    </section>
+
+    <section class="card animate-fadeSlide">
+      <details id="tagValidatorPanel">
+        <summary class="cursor-pointer select-none card-header rounded-t-2xl">
+          <div class="section-title">
+            <span class="step-badge">4</span>
+            <div>
+              <h2 class="font-bold">Validate multiple tags</h2>
+              <p class="text-sm text-textmuted-light dark:text-textmuted-dark">Paste one Omnisend tag per line and test it against the loaded payload.</p>
+            </div>
+          </div>
+          <span class="text-sm font-bold text-cyan-700 dark:text-cyan-200">Open</span>
+        </summary>
+
+        <div class="p-4">
+          <label for="tagValidatorInput" class="sr-only">Tags to validate</label>
+          <textarea id="tagValidatorInput" spellcheck="false" placeholder="[[ event.tracking_number ]]&#10;[[ event.carrier ]]" class="w-full min-h-[120px] rounded-xl border border-edge-light bg-surface-light px-3.5 py-3 text-sm font-mono placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-surface-dark transition" disabled></textarea>
+
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <button id="validateTagsBtn" type="button" class="rounded-xl border border-edge-light bg-card-light px-4 py-2.5 text-sm font-semibold hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition" disabled>Validate Tags</button>
+            <span id="tagValidatorStatus" class="status">Parse a JSON payload first to enable validation.</span>
+          </div>
+
+          <div id="tagValidationResults" class="result-grid mt-4"></div>
+        </div>
+      </details>
     </section>
   </main>
 
-  <footer role="contentinfo" class="mx-auto max-w-7xl px-4 py-6 text-textmuted-light text-[12px] dark:text-textmuted-dark">
+  <section id="compareView" class="hidden mx-auto max-w-7xl px-4 py-5 animate-fadeSlide">
+    <div class="card">
+      <div class="card-header">
+        <div class="section-title">
+          <span class="step-badge">↔</span>
+          <div>
+            <h2 class="font-bold text-base">Compare Payloads</h2>
+            <p class="text-sm text-textmuted-light dark:text-textmuted-dark">Paste two JSON payloads to compare available fields and changed values.</p>
+          </div>
+        </div>
+
+        <button id="backToMainBtn" type="button" class="rounded-xl border border-edge-light bg-card-light px-4 py-2.5 text-sm font-semibold hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark transition">Back to main view</button>
+      </div>
+
+      <div class="p-4">
+        <div class="grid gap-4 lg:grid-cols-2">
+          <div>
+            <label for="compareInputA" class="block text-sm font-semibold mb-2">Payload A</label>
+            <textarea id="compareInputA" spellcheck="false" placeholder='Paste working payload A, e.g. {"raw":{...}}' class="w-full min-h-[320px] rounded-xl border border-edge-light bg-surface-light px-3.5 py-3 text-sm font-mono placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-surface-dark transition"></textarea>
+          </div>
+
+          <div>
+            <label for="compareInputB" class="block text-sm font-semibold mb-2">Payload B</label>
+            <textarea id="compareInputB" spellcheck="false" placeholder='Paste broken/new payload B, e.g. {"raw":{...}}' class="w-full min-h-[320px] rounded-xl border border-edge-light bg-surface-light px-3.5 py-3 text-sm font-mono placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-surface-dark transition"></textarea>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+          <button id="compareBtn" type="button" class="rounded-xl border border-cyan-600/50 bg-gradient-to-r from-cyan-600 to-cyan-500 px-4 py-3 text-sm font-semibold tracking-wide text-white hover:from-cyan-500 hover:to-cyan-400 focus:outline-none focus:ring-2 focus:ring-brand-light active:scale-[.98] transition">Compare</button>
+          <span id="compareStatus" class="status"></span>
+        </div>
+
+        <div id="compareResults" class="mt-5 grid gap-4 lg:grid-cols-3">
+          <section class="rounded-xl border border-edge-light bg-surface-light p-3 dark:border-edge-dark dark:bg-surface-dark">
+            <h3 class="font-bold text-sm mb-2">🟢 Only in Payload A</h3>
+            <div id="onlyAList" class="result-grid text-sm"></div>
+          </section>
+
+          <section class="rounded-xl border border-edge-light bg-surface-light p-3 dark:border-edge-dark dark:bg-surface-dark">
+            <h3 class="font-bold text-sm mb-2">🔴 Only in Payload B</h3>
+            <div id="onlyBList" class="result-grid text-sm"></div>
+          </section>
+
+          <section class="rounded-xl border border-edge-light bg-surface-light p-3 dark:border-edge-dark dark:bg-surface-dark">
+            <h3 class="font-bold text-sm mb-2">🟡 In both but different values</h3>
+            <div id="diffValuesList" class="result-grid text-sm"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="helpModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-hidden="true">
+    <div class="modal-panel">
+      <div class="sticky top-0 flex items-start justify-between gap-3 border-b border-edge-light bg-card-light/95 p-5 backdrop-blur dark:border-edge-dark dark:bg-card-dark/95 rounded-t-[1.25rem]">
+        <div>
+          <h2 id="helpTitle" class="text-xl font-extrabold">How to use this tool</h2>
+          <p class="mt-1 text-sm text-textmuted-light dark:text-textmuted-dark">A quick guide for building and validating Omnisend personalization tags.</p>
+        </div>
+
+        <button id="closeHelpBtn" type="button" class="rounded-full border border-edge-light bg-card-light px-3 py-2 text-sm font-bold hover:bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand-light dark:border-edge-dark dark:bg-card-dark dark:hover:bg-surface-dark">Close</button>
+      </div>
+
+      <div class="p-5 grid gap-4 md:grid-cols-2">
+        <section class="rounded-xl border border-edge-light bg-surface-light p-4 dark:border-edge-dark dark:bg-surface-dark">
+          <h3 class="font-bold">1. Load JSON</h3>
+          <p class="mt-2 text-sm text-textmuted-light dark:text-textmuted-dark">Paste a valid event JSON payload. The tool parses it automatically. You can also click <strong>JSON Breakdown</strong> or press <span class="shortcut-key">Ctrl/⌘</span> + <span class="shortcut-key">Enter</span>.</p>
+          <p class="mt-2 text-sm text-textmuted-light dark:text-textmuted-dark">If JSON is invalid, the error shows the exact line, column, and a caret pointing to the issue.</p>
+        </section>
+
+        <section class="rounded-xl border border-edge-light bg-surface-light p-4 dark:border-edge-dark dark:bg-surface-dark">
+          <h3 class="font-bold">2. Find fields</h3>
+          <p class="mt-2 text-sm text-textmuted-light dark:text-textmuted-dark">Use <strong>Quick search</strong> to search by key or sample value. Click a result to open the tree directly to that field.</p>
+          <p class="mt-2 text-sm text-textmuted-light dark:text-textmuted-dark">You can also browse the tree with mouse clicks or keyboard arrows.</p>
+        </section>
+
+        <section class="rounded-xl border border-edge-light bg-surface-light p-4 dark:border-edge-dark dark:bg-surface-dark">
+          <h3 class="font-bold">3. Build tags</h3>
+          <p class="mt-2 text-sm text-textmuted-light dark:text-textmuted-dark">Select a field to generate a tag like <code>[[ event.raw.order_number ]]</code>. Use the prefix dropdown to include or remove <code>event.</code>.</p>
+          <p class="mt-2 text-sm text-textmuted-light dark:text-textmuted-dark">Add an optional fallback to generate <code>| default: 'value'</code>.</p>
+        </section>
+
+        <section class="rounded-xl border border-edge-light bg-surface-light p-4 dark:border-edge-dark dark:bg-surface-dark">
+          <h3 class="font-bold">4. Check one field</h3>
+          <p class="mt-2 text-sm text-textmuted-light dark:text-textmuted-dark">Use <strong>Does this field exist?</strong> to test a path like <code>raw.order_number</code> or a full tag like <code>[[ event.raw.order_number ]]</code>.</p>
+        </section>
+
+        <section class="rounded-xl border border-edge-light bg-surface-light p-4 dark:border-edge-dark dark:bg-surface-dark">
+          <h3 class="font-bold">5. Validate tags</h3>
+          <p class="mt-2 text-sm text-textmuted-light dark:text-textmuted-dark">Open <strong>Validate multiple tags</strong>, paste one tag per line, and the tool shows whether each tag is valid, invalid, or empty in the loaded payload.</p>
+        </section>
+
+        <section class="rounded-xl border border-edge-light bg-surface-light p-4 dark:border-edge-dark dark:bg-surface-dark">
+          <h3 class="font-bold">6. Compare payloads</h3>
+          <p class="mt-2 text-sm text-textmuted-light dark:text-textmuted-dark">Click <strong>Compare Payloads</strong> to paste two events side by side. The tool lists fields only in A, only in B, and shared fields with different values.</p>
+        </section>
+
+        <section class="md:col-span-2 rounded-xl border border-edge-light bg-surface-light p-4 dark:border-edge-dark dark:bg-surface-dark">
+          <h3 class="font-bold">Keyboard shortcuts</h3>
+          <div class="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4 text-sm text-textmuted-light dark:text-textmuted-dark">
+            <div><span class="shortcut-key">↑</span> / <span class="shortcut-key">↓</span> Move nodes</div>
+            <div><span class="shortcut-key">→</span> Expand / enter</div>
+            <div><span class="shortcut-key">←</span> Collapse / parent</div>
+            <div><span class="shortcut-key">Home</span> / <span class="shortcut-key">End</span> Jump</div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <footer role="contentinfo" class="mx-auto max-w-7xl px-4 pb-8 pt-2 text-textmuted-light text-[12px] dark:text-textmuted-dark">
     <small>Keyboard: ↑ ↓ to move · → to expand/select · ← to collapse · Enter/Space to toggle · Home/End to jump.</small>
   </footer>
 
@@ -153,6 +403,6 @@
       if (saved === 'light') root.classList.remove('dark')
     })()
   </script>
-  <script src="scripts.js"></script>
+  <script src="./scripts/scripts.js"></script>
 </body>
 </html>
