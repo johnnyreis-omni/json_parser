@@ -1,61 +1,232 @@
 # Omnisend Personalization Path Builder
 
-A lightweight web tool to explore JSON payloads and generate **Omnisend personalization tags**.
+A lightweight, single-page web tool for exploring JSON payloads and generating **Omnisend personalization tags**.
 
-It helps marketers and developers quickly find event fields, preview sample values, and copy them as tags for use in Omnisend campaigns.
+It helps marketers, CSMs, implementation specialists, and developers quickly inspect event payloads, find usable fields, preview sample values, validate tags, and compare payloads without needing a local setup or build step.
 
----
-
-## 🚀 Features
-
-- **Paste & Parse JSON**  
-  Paste any valid JSON payload and the tool automatically parses it. You can also click **JSON Breakdown** or press `Ctrl/⌘ + Enter`.
-
-- **Smart JSON Error Helper**  
-  If the pasted JSON is invalid, the tool shows the exact line and column where the issue was found, including a caret preview pointing to the problem.
-
-- **Expandable Tree Navigation**  
-  Explore nested objects and arrays in a clear tree view. Click nodes to expand/collapse them, or use keyboard navigation.
-
-- **Quick Search**  
-  Search fields by key or sample value. Clicking a search result automatically expands the tree, reveals the matching field, highlights it, focuses it, and scrolls it into view.
-
-- **Tag Builder**  
-  Generates valid Omnisend tags like:
-
-  ```liquid
-  [[ event.raw.order_status_url ]]
-  ```
-
-  Optional fallback values are supported:
-
-  ```liquid
-  [[ event.raw.order_status_url | default: '' ]]
-  ```
-
-- **Copy Helpers**  
-  Copy generated tags or preview values with one click.
-
-- **Dark Mode**  
-  Toggle between light and dark themes. The preference is saved in `localStorage`.
-
-- **Accessibility**  
-  Includes keyboard-navigable tree controls, ARIA roles, focus handling, and status messages.
-
-- **Performance-Friendly Rendering**  
-  Handles complex JSON structures with a clean, collapsible interface.
-
----
-
-## 🛠️ Setup
-
-Access the tool here:
+Live tool:
 
 [Omnisend Personalization Path Builder](https://johnnyreis-omni.github.io/json_parser/)
 
-No installation is required.
+---
 
-If running locally, make sure the files are placed together like this:
+## What this tool helps with
+
+Use this tool when you need to:
+
+- Find the correct personalization path for an Omnisend event field
+- Generate tags like `[[ event.raw.order_number ]]`
+- Preview the value behind a field before using it in a campaign
+- Check whether a field exists in a pasted payload
+- Validate multiple tags against the current payload
+- Compare two event payloads to understand what changed
+- Debug invalid JSON with a clear line and column pointer
+
+---
+
+## Features
+
+### Paste and auto-parse JSON
+
+Paste a valid JSON payload into the **Load your JSON payload** section and the tool parses it automatically.
+
+You can also manually parse with:
+
+- **JSON Breakdown**
+- `Ctrl/⌘ + Enter`
+
+### Smart JSON error helper
+
+If the payload is invalid, the tool shows:
+
+- The exact line
+- The exact column
+- A short explanation
+- A caret pointing to the problem location
+
+Example:
+
+```text
+Invalid JSON at line 3, column 26: Trailing comma found. Remove the comma before "}".
+    "order_number": "123",
+                         ^
+```
+
+### Guided interface
+
+The UI is organized into a simple workflow:
+
+1. **Load payload**
+2. **Find a field**
+3. **Copy or validate**
+
+The header also includes:
+
+- Payload status indicator
+- **Help me** button
+- **Compare Payloads** button
+- Dark/light mode toggle
+
+### Help me modal
+
+The **Help me** button opens an instruction modal explaining how to:
+
+- Load JSON
+- Fix JSON errors
+- Find fields
+- Build tags
+- Check one field
+- Validate multiple tags
+- Compare payloads
+- Use keyboard shortcuts
+
+### Interactive JSON tree
+
+Parsed JSON appears as an expandable/collapsible tree.
+
+You can:
+
+- Expand and collapse objects or arrays
+- Select fields to generate tags
+- Navigate using the keyboard
+- Expand all tree nodes
+- See object and array counts
+- See scalar value previews
+
+### Quick Search
+
+Use **Quick search** to find fields by:
+
+- Key name
+- Full path
+- Sample value
+
+Clicking a search result:
+
+1. Expands the required parent nodes
+2. Reveals the matching field in the tree
+3. Highlights the selected field
+4. Focuses it for keyboard navigation
+5. Scrolls it into view
+6. Generates the corresponding Omnisend tag
+
+Search results are displayed in a compact layout so long paths do not create horizontal scrolling.
+
+### Tag Builder
+
+Selecting a field generates an Omnisend personalization tag.
+
+Example:
+
+```liquid
+[[ event.raw.order_status_url ]]
+```
+
+The tool supports:
+
+- `event.` prefix
+- No prefix
+- Optional fallback values
+
+Example with fallback:
+
+```liquid
+[[ event.raw.first_name | default: 'there' ]]
+```
+
+### Does this field exist?
+
+Use the **Does this field exist?** checker to test a single path or full tag.
+
+Accepted examples:
+
+```text
+raw.order_number
+[[ event.raw.order_number ]]
+[[ event.raw.customer.first_name | default: 'there' ]]
+```
+
+The checker returns:
+
+- Found value
+- Not found
+- Found but empty
+- Invalid path syntax
+
+### Validate multiple tags
+
+The **Validate multiple tags** section lets you paste one tag per line and validate all of them against the currently loaded payload.
+
+Example input:
+
+```liquid
+[[ event.raw.order_number ]]
+[[ event.raw.tracking_number ]]
+[[ event.raw.customer.email ]]
+```
+
+Each result is labeled as:
+
+- Valid — path resolves to a non-empty value
+- Invalid — path does not exist
+- Empty — path exists but value is `null`, `undefined`, or an empty string
+
+### Compare Payloads
+
+The **Compare Payloads** mode lets you paste two JSON payloads side by side.
+
+This is useful for comparing:
+
+- A working event vs. a broken event
+- Old payload format vs. new payload format
+- Shopify payload variations
+- QA/test payloads vs. production payloads
+
+The comparison shows:
+
+- **Only in Payload A** — fields present in A but missing in B
+- **Only in Payload B** — fields present in B but missing in A
+- **In both but different values** — fields present in both with different values
+
+### Copy helpers
+
+Use one-click buttons to copy:
+
+- Generated Omnisend tag
+- Preview value
+
+A status message confirms whether the copy succeeded.
+
+### Dark mode
+
+Use the sun/moon button in the header to switch between light and dark mode.
+
+The theme preference is saved in `localStorage`.
+
+### Accessibility
+
+The tool includes:
+
+- Keyboard-navigable tree controls
+- ARIA roles for tree and dialog behavior
+- Focus handling
+- Status messages
+- Escape-to-close help modal
+- Skip-to-content link
+
+---
+
+## Setup
+
+No installation is required for the hosted version.
+
+Open:
+
+[https://johnnyreis-omni.github.io/json_parser/](https://johnnyreis-omni.github.io/json_parser/)
+
+### Local setup
+
+Place the files together:
 
 ```text
 index.html
@@ -63,46 +234,53 @@ scripts.js
 README.md
 ```
 
-The HTML file loads:
+The HTML file loads the JavaScript file with:
 
 ```html
 <script src="scripts.js"></script>
 ```
 
-So the JavaScript file should be named `scripts.js`.
+So the JavaScript file should be named:
+
+```text
+scripts.js
+```
+
+There is no framework, no npm dependency, and no build step.
 
 ---
 
-## 📖 Usage Guide
+## Usage Guide
 
-### 1. Paste JSON
+### 1. Load a JSON payload
 
-Go to the **Paste JSON** section and paste a valid JSON payload.
+Paste a valid JSON payload into **Load your JSON payload**.
 
-The tool will automatically parse valid JSON after paste.
-
-You can also manually parse by:
-
-- Clicking **JSON Breakdown**
-- Pressing `Ctrl/⌘ + Enter`
-
-Example input:
+Example:
 
 ```json
 {
   "raw": {
     "subtotal": "99",
     "order_number": "123456",
-    "order_status_url": "https://example.com/orders/123456"
+    "order_status_url": "https://example.com/orders/123456",
+    "customer": {
+      "email": "customer@example.com",
+      "first_name": "Jane"
+    }
   }
 }
 ```
 
+The tool parses valid JSON automatically after paste.
+
+You can also click **JSON Breakdown** or press `Ctrl/⌘ + Enter`.
+
 ---
 
-### 2. Fix Invalid JSON
+### 2. Fix invalid JSON
 
-If the JSON is invalid, the tool shows where the issue is located.
+If your JSON is invalid, the tool shows the error location.
 
 Example invalid JSON:
 
@@ -114,7 +292,7 @@ Example invalid JSON:
 }
 ```
 
-Example error message:
+Example error:
 
 ```text
 Invalid JSON at line 3, column 26: Trailing comma found. Remove the comma before "}".
@@ -122,9 +300,7 @@ Invalid JSON at line 3, column 26: Trailing comma found. Remove the comma before
                          ^
 ```
 
-The textarea also focuses the problematic character so it is easier to fix.
-
-Common JSON issues the helper can catch include:
+Common issues the helper can catch include:
 
 - Trailing commas
 - Missing commas
@@ -138,21 +314,53 @@ Common JSON issues the helper can catch include:
 
 ---
 
-### 3. Explore Fields
+### 3. Find a field
 
-After parsing, the JSON appears as a tree.
+After parsing, you can find fields in three ways.
 
-You can:
+#### Option A — Use Quick Search
 
-- Click nodes to expand or collapse them
-- Select any field to generate a tag
-- Use keyboard navigation to move through the tree
-- Expand all nodes using the **Expand all** button
+Search by key, path, or value.
+
+Examples:
+
+```text
+email
+order_number
+line_items
+city
+example@example.com
+```
+
+Click any search result to jump to that field in the tree.
+
+#### Option B — Browse the JSON tree
+
+Click nodes to expand or collapse them.
 
 Selecting a field shows:
 
-- The generated Omnisend tag
-- A preview of the selected value
+- Generated Omnisend tag
+- Preview value
+
+#### Option C — Use Does this field exist?
+
+Paste a path or tag into the single-field checker.
+
+Examples:
+
+```text
+raw.order_number
+[[ event.raw.order_number ]]
+```
+
+Then click **Check** or press `Enter`.
+
+---
+
+### 4. Generate a tag
+
+When you select a field, the tool generates a tag automatically.
 
 Example selected field:
 
@@ -178,17 +386,9 @@ Preview value:
 
 ---
 
-### 4. Generate Omnisend Tags
+### 5. Change tag prefix
 
-When a field is selected, the tool builds a personalization tag automatically.
-
-Default format:
-
-```liquid
-[[ event.raw.order_number ]]
-```
-
-You can control the tag prefix using the **Tag prefix** dropdown.
+Use the **Tag prefix** dropdown.
 
 Available options:
 
@@ -211,11 +411,11 @@ With no prefix:
 
 ---
 
-### 5. Add a Fallback Value
+### 6. Add a fallback value
 
-Use the **Optional fallback** input to add a default value.
+Use **Optional fallback** to add a default value.
 
-Example fallback:
+Fallback:
 
 ```text
 there
@@ -224,69 +424,71 @@ there
 Generated tag:
 
 ```liquid
-[[ event.raw.first_name | default: 'there' ]]
+[[ event.raw.customer.first_name | default: 'there' ]]
 ```
 
-This is useful when the field may be missing or empty.
+Fallbacks are useful when a field may be missing or empty.
 
 ---
 
-### 6. Use Quick Search
+### 7. Validate multiple tags
 
-Use the **Quick search** box to search by:
+Open **Validate multiple tags**.
 
-- Field name
-- Path
-- Sample value
+Paste one tag per line:
 
-Example searches:
+```liquid
+[[ event.raw.order_number ]]
+[[ event.raw.tracking_number ]]
+[[ event.raw.customer.email ]]
+```
+
+Click **Validate Tags**.
+
+The results show:
 
 ```text
-email
-order_number
-line_items
-city
-example@example.com
+Valid   - path exists and has a value
+Invalid - path does not exist in the payload
+Empty   - path exists but is null, undefined, or empty string
 ```
 
-Search results are labeled as either:
+---
 
-- `key`
-- `value`
+### 8. Compare two payloads
 
-Clicking a Quick Search result will:
+Click **Compare Payloads** in the header.
 
-1. Expand the needed parent nodes in the tree
-2. Reveal the matching field
-3. Highlight the selected field
-4. Focus the field for keyboard navigation
-5. Scroll the matching field into view
-6. Generate the corresponding Omnisend tag
+Paste:
 
-This makes it easier to jump directly to deeply nested fields.
+- Payload A
+- Payload B
+
+Click **Compare**.
+
+The tool shows:
+
+- Fields only in Payload A
+- Fields only in Payload B
+- Shared fields with different values
+
+Click **Back to main view** to return to the main builder.
 
 ---
 
-### 7. Copy Tags or Values
+### 9. Use Help me
 
-After selecting a field, use:
+Click **Help me** in the header to open the built-in usage guide.
 
-- **Copy tag** to copy the Omnisend tag
-- **Copy value** to copy the preview value
+Close it by:
 
-A status message confirms whether the copy was successful.
-
----
-
-### 8. Toggle Theme
-
-Use the sun/moon button in the header to switch between light and dark mode.
-
-The selected theme is saved in the browser using `localStorage`.
+- Clicking **Close**
+- Pressing `Escape`
+- Clicking outside the modal
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+## Keyboard Shortcuts
 
 | Shortcut | Action |
 |---|---|
@@ -295,15 +497,18 @@ The selected theme is saved in the browser using `localStorage`.
 | `←` | Collapse node or move to parent |
 | `Enter` | Select node and toggle expansion |
 | `Space` | Select node and toggle expansion |
-| `Home` | Jump to first node |
-| `End` | Jump to last node |
-| `Ctrl/⌘ + Enter` | Parse JSON manually |
+| `Home` | Jump to first tree node |
+| `End` | Jump to last tree node |
+| `Ctrl/⌘ + Enter` in JSON input | Parse JSON manually |
+| `Enter` in field checker | Check field |
+| `Ctrl/⌘ + Enter` in tag validator | Validate tags |
+| `Escape` | Close Help modal |
 
 ---
 
-## ✅ Example
+## Examples
 
-### Input JSON
+### Basic payload
 
 ```json
 {
@@ -318,97 +523,178 @@ The selected theme is saved in the browser using `localStorage`.
 }
 ```
 
-### Selecting `raw.order_number`
-
-Generated tag:
+### Generated order number tag
 
 ```liquid
 [[ event.raw.order_number ]]
 ```
 
-Preview value:
+Preview:
 
 ```text
 "123456"
 ```
 
-### Selecting `raw.customer.first_name` with fallback `there`
-
-Generated tag:
+### Generated first name tag with fallback
 
 ```liquid
 [[ event.raw.customer.first_name | default: 'there' ]]
 ```
 
-Preview value:
+Preview:
 
 ```text
 "Jane"
 ```
 
+### Field checker examples
+
+```text
+raw.order_number
+[[ event.raw.order_number ]]
+[[ event.raw.customer.email ]]
+```
+
+### Tag validator example
+
+```liquid
+[[ event.raw.order_number ]]
+[[ event.raw.customer.email ]]
+[[ event.raw.tracking_number ]]
+```
+
 ---
 
-## 🧪 Testing Checklist
+## Testing Checklist
 
-Before publishing changes, test the following:
+Before publishing changes, test the following.
 
-### Valid JSON
+### JSON parsing
 
 - Paste valid JSON
-- Confirm the tree builds automatically
+- Confirm it parses automatically
 - Confirm **JSON Breakdown** still works
 - Confirm `Ctrl/⌘ + Enter` still works
+- Confirm the payload status pill updates
 
-### Invalid JSON
+### JSON errors
 
 - Paste JSON with a trailing comma
 - Paste JSON with a missing comma
 - Paste JSON with an unclosed string
 - Paste JSON with an unquoted key
-- Confirm the error shows line, column, and caret
+- Confirm line, column, and caret are shown
 - Confirm the textarea focuses the problem area
+
+### Tree navigation
+
+- Expand and collapse nested objects
+- Select a scalar value
+- Select an object
+- Select an array
+- Use arrow keys
+- Use Home and End
+- Use Expand all tree nodes
 
 ### Quick Search
 
 - Search for a top-level field
 - Search for a deeply nested field
 - Search for a sample value
-- Click a search result
+- Click a result
 - Confirm the tree expands to the matching field
-- Confirm the field is highlighted and scrolled into view
-- Confirm the generated tag is correct
+- Confirm the field is highlighted
+- Confirm the selected field scrolls into view
+- Confirm long paths do not create horizontal scrolling
 
-### Copy Buttons
+### Tag Builder
 
-- Copy tag
-- Copy preview value
-- Confirm the status message updates
+- Select a field and confirm the tag is generated
+- Switch prefix from `event` to `none`
+- Add a fallback value
+- Confirm tag updates when prefix or fallback changes
+
+### Field checker
+
+- Check a valid path
+- Check a full tag
+- Check a tag with a fallback filter
+- Check a missing path
+- Check an empty/null field
+- Check invalid path syntax
+
+### Tag validator
+
+- Paste multiple valid tags
+- Include invalid tags
+- Include empty/null fields
+- Confirm counts update correctly
+- Confirm `Ctrl/⌘ + Enter` validates
+
+### Compare Payloads
+
+- Compare two identical payloads
+- Compare payloads with missing fields
+- Compare payloads with different values
+- Test invalid JSON in Payload A
+- Test invalid JSON in Payload B
+- Confirm **Back to main view** works
+
+### Help modal
+
+- Open Help me
+- Close with Close button
+- Close with Escape
+- Confirm focus returns correctly
 
 ### Theme
 
 - Toggle dark mode
 - Refresh the page
-- Confirm the theme preference is remembered
+- Confirm theme preference is remembered
 
 ---
 
-## 🧑‍💻 Notes for Developers
+## Notes for Developers
 
-The main JavaScript file handles:
+The app is built with:
+
+- HTML
+- Tailwind CDN
+- Vanilla CSS
+- Vanilla JavaScript
+
+There is:
+
+- No React
+- No Vue
+- No npm
+- No bundler
+- No build step
+
+### Main JavaScript responsibilities
+
+`scripts.js` handles:
 
 - JSON parsing
 - Custom JSON syntax validation
 - Error line/column detection
 - Tree rendering
+- Tree keyboard navigation
 - Search indexing
 - Search result reveal behavior
 - Tag generation
 - Fallback formatting
+- Field existence checks
+- Multi-tag validation
+- Payload diffing
 - Clipboard copy
-- Keyboard navigation
+- Help modal behavior
+- Compare mode behavior
 - Theme persistence
+- Payload status updates
 
-Important functions include:
+### Important functions
 
 ```js
 tryParse()
@@ -419,17 +705,38 @@ makeNode()
 revealTreeItem()
 selectNode()
 buildTag()
+normalizeTagOrPath()
+parsePathToTokens()
+resolvePath()
+runFieldCheck()
+validateTags()
+flattenPayload()
+comparePayloads()
+openHelpModal()
+closeHelpModal()
 ```
 
-The Quick Search reveal behavior depends on indexing tree nodes by their generated path, so each tree item can be found and expanded when a search result is clicked.
+### Search reveal behavior
+
+Quick Search depends on a path-to-node index.
+
+Each tree item receives a generated path, and `nodeIndex` stores the matching tree element. When a user clicks a search result, the tool expands all parent nodes, selects the matched node, focuses it, and scrolls it into view.
+
+### Compare behavior
+
+Compare mode flattens both payloads into dot-notation paths, then checks:
+
+- Keys present only in A
+- Keys present only in B
+- Keys present in both with different serialized values
 
 ---
 
-## 📌 Roadmap Ideas
+## Roadmap Ideas
 
 Possible future improvements:
 
-- Copy full path without the Omnisend tag wrapper
+- Copy full path without tag wrapper
 - Tag format presets
 - Recent JSON history
 - Search result text highlighting
@@ -438,9 +745,12 @@ Possible future improvements:
 - Shareable state using URL parameters
 - Download generated tag list
 - Beautify/minify JSON controls
+- Export compare results
+- Load sample payloads
+- Add path suggestions for common ecommerce fields
 
 ---
 
-## 📝 License
+## License
 
 Internal utility for Omnisend-related personalization workflows.
