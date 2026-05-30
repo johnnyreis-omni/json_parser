@@ -4,6 +4,7 @@
   const clearBtn = document.getElementById('clearBtn');
   const treeEl = document.getElementById('tree');
   const out = document.getElementById('out');
+  const emptyOutputHint = document.getElementById('emptyOutputHint');
   const tagEl = document.getElementById('tag');
   const previewEl = document.getElementById('preview');
   const prefixSelect = document.getElementById('prefixSelect');
@@ -14,10 +15,43 @@
   const liveStatus = document.getElementById('live-status');
   const copyStatus = document.getElementById('copy-status');
   const themeBtn = document.getElementById('themeBtn');
+  const helpBtn = document.getElementById('helpBtn');
+  const helpModal = document.getElementById('helpModal');
+  const closeHelpBtn = document.getElementById('closeHelpBtn');
+  const payloadStatusPill = document.getElementById('payloadStatusPill');
+
+  const fieldCheckInput = document.getElementById('fieldCheckInput');
+  const fieldCheckBtn = document.getElementById('fieldCheckBtn');
+  const fieldCheckResult = document.getElementById('fieldCheckResult');
+
+  const tagValidatorInput = document.getElementById('tagValidatorInput');
+  const validateTagsBtn = document.getElementById('validateTagsBtn');
+  const tagValidationResults = document.getElementById('tagValidationResults');
+  const tagValidatorStatus = document.getElementById('tagValidatorStatus');
+
+  const compareModeBtn = document.getElementById('compareModeBtn');
+  const mainView = document.getElementById('mainView');
+  const compareView = document.getElementById('compareView');
+  const backToMainBtn = document.getElementById('backToMainBtn');
+  const compareInputA = document.getElementById('compareInputA');
+  const compareInputB = document.getElementById('compareInputB');
+  const compareBtn = document.getElementById('compareBtn');
+  const compareStatus = document.getElementById('compareStatus');
+  const onlyAList = document.getElementById('onlyAList');
+  const onlyBList = document.getElementById('onlyBList');
+  const diffValuesList = document.getElementById('diffValuesList');
 
   let leafIndex = [];
   let nodeIndex = new Map();
   let lastTokens = null;
+  let currentPayload;
+  let hasParsedPayload = false;
+  let lastFocusedBeforeHelp = null;
+
+  const isObject = v => v && typeof v === 'object' && !Array.isArray(v);
+  const isScalar = v => v === null || typeof v !== 'object';
+  const isValidIdent = k => /^[A-Za-z_][A-Za-z0-9_]*$/.test(k);
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   function announce(msg, isError = false) {
     if (!liveStatus) return;
@@ -27,6 +61,32 @@
 
     liveStatus.classList.toggle('bad', isError);
     liveStatus.classList.toggle('good', !isError);
+  }
+
+  function setStatus(el, msg, type = '') {
+    if (!el) return;
+
+    el.textContent = msg;
+    el.style.whiteSpace = msg.includes('\n') ? 'pre-wrap' : '';
+    el.className = `status${type ? ` ${type}` : ''}${el.id === 'fieldCheckResult' ? ' mt-2' : ''}`;
+  }
+
+  function setPayloadStatus(type, text) {
+    if (!payloadStatusPill) return;
+
+    payloadStatusPill.textContent = text;
+    payloadStatusPill.className = `status-pill${type ? ` ${type}` : ''}`;
+  }
+
+  function setResultCard(el, html, type) {
+    if (!el) return;
+    el.className = `result-card ${type}${el.id === 'fieldCheckResult' ? ' mt-2' : ''}`;
+    el.innerHTML = html;
+  }
+
+  function setOutputVisible(isVisible) {
+    if (out) out.style.display = isVisible ? 'grid' : 'none';
+    if (emptyOutputHint) emptyOutputHint.classList.toggle('hidden', isVisible);
   }
 
   async function copyToClipboard(text) {
@@ -55,16 +115,11 @@
     }
   }
 
-  const isObject = v => v && typeof v === 'object' && !Array.isArray(v);
-  const isScalar = v => v === null || typeof v !== 'object';
-  const isValidIdent = k => /^[A-Za-z_][A-Za-z0-9_]*$/.test(k);
-  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
   function tokenToString(t) {
     return t.t === 'key'
       ? isValidIdent(t.v)
         ? '.' + t.v
-        : `['${t.v.replace(/'/g, "\\'")}']`
+        : `['${String(t.v).replace(/'/g, "\\'")}']`
       : `[${t.v}]`;
   }
 
@@ -95,7 +150,29 @@
     return tag;
   }
 
+  function stableStringify(value) {
+    if (value === undefined) return 'undefined';
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+
+    if (Array.isArray(value)) {
+      return `[${value.map(stableStringify).join(',')}]`;
+    }
+
+    const keys = Object.keys(value).sort();
+    return `{${keys.map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+  }
+
+  function displayValue(value, maxLength = 500) {
+    let text = stableStringify(value);
+
+    if (text === undefined) text = String(value);
+    if (text.length > maxLength) text = `${text.slice(0, maxLength)}…`;
+
+    return text;
+  }
+
   function summarize(val) {
+    if (val === undefined) return 'undefined';
     if (isScalar(val)) return JSON.stringify(val);
     if (Array.isArray(val)) return `Array(${val.length})`;
     return `Object(${Object.keys(val).length})`;
@@ -460,6 +537,154 @@
     return null;
   }
 
+  function normalizeTagOrPath(raw) {
+    let path = String(raw || '').trim();
+
+    if (!path) return { path: '', displayPath: '' };
+
+    if ((path.startsWith('[[') && path.endsWith(']]')) || (path.startsWith('{{') && path.endsWith('}}'))) {
+      path = path.slice(2, -2).trim();
+    }
+
+    const pipeIndex = path.indexOf('|');
+    if (pipeIndex !== -1) path = path.slice(0, pipeIndex).trim();
+
+    if (path.startsWith('event.')) path = path.slice('event.'.length);
+    else if (path === 'event') path = '';
+    else if (path.startsWith('event[')) path = path.slice('event'.length);
+
+    if (path.startsWith('.')) path = path.slice(1);
+
+    return {
+      path,
+      displayPath: path || '(root)'
+    };
+  }
+
+  function parsePathToTokens(path) {
+    const tokens = [];
+    let i = 0;
+    const text = String(path || '').trim();
+
+    if (!text) return { tokens };
+
+    while (i < text.length) {
+      const ch = text[i];
+
+      if (ch === '.') {
+        i++;
+        if (i >= text.length) return { error: 'Path cannot end with a dot.' };
+        continue;
+      }
+
+      if (ch === '[') {
+        i++;
+
+        if (i >= text.length) return { error: 'Unclosed bracket in path.' };
+
+        const quote = text[i] === '"' || text[i] === "'" ? text[i] : null;
+
+        if (quote) {
+          i++;
+          let value = '';
+          let closedQuote = false;
+
+          while (i < text.length) {
+            if (text[i] === '\\' && i + 1 < text.length) {
+              value += text[i + 1];
+              i += 2;
+              continue;
+            }
+
+            if (text[i] === quote) {
+              closedQuote = true;
+              i++;
+              break;
+            }
+
+            value += text[i];
+            i++;
+          }
+
+          if (!closedQuote) return { error: 'Unclosed quoted key in path.' };
+
+          while (text[i] === ' ') i++;
+          if (text[i] !== ']') return { error: 'Expected closing bracket after quoted key.' };
+          i++;
+
+          tokens.push({ t: 'key', v: value });
+          continue;
+        }
+
+        let raw = '';
+        while (i < text.length && text[i] !== ']') {
+          raw += text[i];
+          i++;
+        }
+
+        if (text[i] !== ']') return { error: 'Unclosed bracket in path.' };
+        i++;
+
+        const value = raw.trim();
+        if (!value) return { error: 'Empty brackets are not a valid path segment.' };
+
+        if (/^\d+$/.test(value)) tokens.push({ t: 'index', v: Number(value) });
+        else tokens.push({ t: 'key', v: value });
+
+        continue;
+      }
+
+      let segment = '';
+      while (i < text.length && text[i] !== '.' && text[i] !== '[') {
+        segment += text[i];
+        i++;
+      }
+
+      segment = segment.trim();
+      if (!segment) return { error: 'Empty path segment found.' };
+
+      tokens.push({ t: 'key', v: segment });
+    }
+
+    return { tokens };
+  }
+
+  function resolvePath(data, rawPath) {
+    const parsed = parsePathToTokens(rawPath);
+    if (parsed.error) return { exists: false, error: parsed.error };
+
+    let value = data;
+
+    for (const token of parsed.tokens) {
+      if (token.t === 'index' || (Array.isArray(value) && token.t === 'key' && /^\d+$/.test(token.v))) {
+        const idx = token.t === 'index' ? token.v : Number(token.v);
+
+        if (!Array.isArray(value) || idx < 0 || idx >= value.length) {
+          return { exists: false };
+        }
+
+        value = value[idx];
+        continue;
+      }
+
+      if (value === null || value === undefined || typeof value !== 'object') {
+        return { exists: false };
+      }
+
+      if (!Object.prototype.hasOwnProperty.call(value, token.v)) {
+        return { exists: false };
+      }
+
+      value = value[token.v];
+    }
+
+    return { exists: true, value, tokens: parsed.tokens };
+  }
+
+  function isEmptyResolvedValue(value) {
+    return value === null || value === undefined || value === '';
+  }
+
   function makeNode(label, value, tokens, depth = 1) {
     const li = document.createElement('li');
     const pathStr = tokensToPath(tokens, { stripLeadingDot: true });
@@ -639,6 +864,8 @@
   }
 
   function toggleExpand(li, expand = true) {
+    if (!li) return;
+
     if (expand) {
       li.classList.remove('collapsed');
       li.setAttribute('aria-expanded', 'true');
@@ -673,7 +900,7 @@
 
     tagEl.textContent = buildTag(tokens);
     previewEl.textContent = summarize(value);
-    out.style.display = 'grid';
+    setOutputVisible(true);
 
     out.classList.add('animate-pop');
     setTimeout(() => out.classList.remove('animate-pop'), 220);
@@ -734,19 +961,47 @@
       li.setAttribute('aria-level', '1');
       li.setAttribute('aria-selected', 'false');
       li.dataset.path = '';
-      li.innerHTML = `<div class="node" tabindex="0"><span class="chev" style="visibility:hidden">•</span><span class="k">root</span><span class="meta">${summarize(data)}</span></div>`;
+      li.innerHTML = `<div class="node" tabindex="0"><span class="chev" style="visibility:hidden">•</span><span class="k">root</span><span class="meta">${esc(summarize(data))}</span></div>`;
       rootUl.appendChild(li);
       nodeIndex.set('', li);
     }
   }
 
-  function clearOutput() {
-    out.style.display = 'none';
+  function updateParsedDependentControls() {
+    const controls = [fieldCheckInput, fieldCheckBtn, tagValidatorInput, validateTagsBtn];
+
+    controls.forEach(el => {
+      if (el) el.disabled = !hasParsedPayload;
+    });
+
+    if (!hasParsedPayload) {
+      setPayloadStatus('', 'No payload loaded');
+      setStatus(fieldCheckResult, 'Parse a JSON payload first to check fields.');
+      setStatus(tagValidatorStatus, 'Parse a JSON payload first to enable validation.');
+      if (tagValidationResults) tagValidationResults.innerHTML = '';
+      return;
+    }
+
+    const fieldCount = leafIndex.length;
+    setPayloadStatus('ok', `${fieldCount} searchable field${fieldCount === 1 ? '' : 's'} loaded`);
+    setStatus(fieldCheckResult, 'Ready to check a field path.', 'good');
+    setStatus(tagValidatorStatus, 'Ready to validate tags.', 'good');
+  }
+
+  function clearOutput({ keepParsedPayload = false } = {}) {
+    setOutputVisible(false);
     treeEl.innerHTML = '';
     resultsEl.innerHTML = '';
     leafIndex = [];
     nodeIndex = new Map();
     lastTokens = null;
+
+    if (!keepParsedPayload) {
+      currentPayload = undefined;
+      hasParsedPayload = false;
+    }
+
+    updateParsedDependentControls();
   }
 
   function tryParse({ auto = false } = {}) {
@@ -769,9 +1024,13 @@
     try {
       const data = JSON.parse(txt);
 
-      buildTree(data);
+      currentPayload = data;
+      hasParsedPayload = true;
 
-      out.style.display = 'none';
+      buildTree(data);
+      updateParsedDependentControls();
+
+      setOutputVisible(false);
       resultsEl.innerHTML = '';
 
       announce(auto ? 'Valid JSON pasted and parsed ✓' : 'JSON parsed ✓');
@@ -781,6 +1040,315 @@
     } catch (err) {
       announce('Invalid JSON: ' + err.message, true);
       clearOutput();
+    }
+  }
+
+  function runFieldCheck() {
+    if (!hasParsedPayload) {
+      setStatus(fieldCheckResult, 'Parse a JSON payload first to check fields.', 'bad');
+      return;
+    }
+
+    const raw = fieldCheckInput.value.trim();
+
+    if (!raw) {
+      setStatus(fieldCheckResult, 'Type a field path or tag first.', 'warn');
+      return;
+    }
+
+    const normalized = normalizeTagOrPath(raw);
+    const resolved = resolvePath(currentPayload, normalized.path);
+
+    if (resolved.error) {
+      setResultCard(
+        fieldCheckResult,
+        `<div class="result-title">❌ Invalid path syntax</div><div class="result-value">${esc(resolved.error)}</div>`,
+        'bad'
+      );
+      return;
+    }
+
+    if (!resolved.exists) {
+      setResultCard(
+        fieldCheckResult,
+        `<div class="result-title">❌ Not found in payload</div><div class="result-value">${esc(normalized.displayPath)}</div>`,
+        'bad'
+      );
+      return;
+    }
+
+    if (isEmptyResolvedValue(resolved.value)) {
+      setResultCard(
+        fieldCheckResult,
+        `<div class="result-title">⚠️ Found but empty</div><div class="result-value">${esc(normalized.displayPath)} = ${esc(displayValue(resolved.value))}</div>`,
+        'warn'
+      );
+      return;
+    }
+
+    setResultCard(
+      fieldCheckResult,
+      `<div class="result-title">✅ Found</div><div class="result-value">${esc(normalized.displayPath)} = ${esc(displayValue(resolved.value))}</div>`,
+      'ok'
+    );
+  }
+
+  function validateTags() {
+    if (!hasParsedPayload) {
+      setStatus(tagValidatorStatus, 'Parse a JSON payload first to enable validation.', 'bad');
+      return;
+    }
+
+    const lines = tagValidatorInput.value
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean);
+
+    tagValidationResults.innerHTML = '';
+
+    if (!lines.length) {
+      setStatus(tagValidatorStatus, 'Paste at least one tag to validate.', 'warn');
+      return;
+    }
+
+    let validCount = 0;
+    let emptyCount = 0;
+    let invalidCount = 0;
+
+    lines.forEach(line => {
+      const normalized = normalizeTagOrPath(line);
+      const resolved = resolvePath(currentPayload, normalized.path);
+      const row = document.createElement('div');
+
+      if (resolved.error || !resolved.exists) {
+        invalidCount++;
+        row.className = 'result-card bad';
+        row.innerHTML = `
+          <div class="result-title">❌ Invalid</div>
+          <div class="result-value">${esc(line)}</div>
+          <div class="text-xs mt-1 text-textmuted-light dark:text-textmuted-dark">Path checked: ${esc(normalized.displayPath)}${resolved.error ? ` · ${esc(resolved.error)}` : ''}</div>
+        `;
+      } else if (isEmptyResolvedValue(resolved.value)) {
+        emptyCount++;
+        row.className = 'result-card warn';
+        row.innerHTML = `
+          <div class="result-title">⚠️ Empty</div>
+          <div class="result-value">${esc(line)}</div>
+          <div class="text-xs mt-1 text-textmuted-light dark:text-textmuted-dark">${esc(normalized.displayPath)} = ${esc(displayValue(resolved.value))}</div>
+        `;
+      } else {
+        validCount++;
+        row.className = 'result-card ok';
+        row.innerHTML = `
+          <div class="result-title">✅ Valid</div>
+          <div class="result-value">${esc(line)}</div>
+          <div class="text-xs mt-1 text-textmuted-light dark:text-textmuted-dark">${esc(normalized.displayPath)} = ${esc(displayValue(resolved.value))}</div>
+        `;
+      }
+
+      tagValidationResults.appendChild(row);
+    });
+
+    setStatus(
+      tagValidatorStatus,
+      `Checked ${lines.length} tag${lines.length === 1 ? '' : 's'}: ${validCount} valid, ${emptyCount} empty, ${invalidCount} invalid.`,
+      invalidCount ? 'warn' : 'good'
+    );
+  }
+
+  function flattenPayload(data) {
+    const map = new Map();
+
+    function walk(value, tokens) {
+      const path = tokensToPath(tokens, { stripLeadingDot: true }) || '(root)';
+
+      if (isScalar(value)) {
+        map.set(path, value);
+        return;
+      }
+
+      if (Array.isArray(value)) {
+        if (!value.length) {
+          map.set(path, []);
+          return;
+        }
+
+        value.forEach((item, index) => {
+          walk(item, tokens.concat([{ t: 'index', v: index }]));
+        });
+
+        return;
+      }
+
+      const keys = Object.keys(value).sort();
+
+      if (!keys.length) {
+        map.set(path, {});
+        return;
+      }
+
+      keys.forEach(key => {
+        walk(value[key], tokens.concat([{ t: 'key', v: key }]));
+      });
+    }
+
+    walk(data, []);
+    return map;
+  }
+
+  function parseJsonForCompare(text, label) {
+    if (!text.trim()) {
+      return { ok: false, message: `Payload ${label} is empty.` };
+    }
+
+    const syntaxError = getJsonSyntaxError(text);
+
+    if (syntaxError) {
+      return { ok: false, message: `Payload ${label}: ${formatJsonError(text, syntaxError)}` };
+    }
+
+    try {
+      return { ok: true, data: JSON.parse(text) };
+    } catch (err) {
+      return { ok: false, message: `Payload ${label}: ${err.message}` };
+    }
+  }
+
+  function renderCompareList(container, items, emptyText, type) {
+    container.innerHTML = '';
+
+    if (!items.length) {
+      const empty = document.createElement('div');
+      empty.className = 'status';
+      empty.textContent = emptyText;
+      container.appendChild(empty);
+      return;
+    }
+
+    const maxItems = 300;
+
+    items.slice(0, maxItems).forEach(item => {
+      const row = document.createElement('div');
+      row.className = `result-card ${type}`;
+
+      if (Object.prototype.hasOwnProperty.call(item, 'valueA')) {
+        row.innerHTML = `
+          <div class="result-title"><code>${esc(item.path)}</code></div>
+          <div class="result-value">A: ${esc(displayValue(item.valueA, 240))}\nB: ${esc(displayValue(item.valueB, 240))}</div>
+        `;
+      } else {
+        row.innerHTML = `
+          <div class="result-title"><code>${esc(item.path)}</code></div>
+          <div class="result-value">${esc(displayValue(item.value, 260))}</div>
+        `;
+      }
+
+      container.appendChild(row);
+    });
+
+    if (items.length > maxItems) {
+      const more = document.createElement('div');
+      more.className = 'status warn';
+      more.textContent = `Showing first ${maxItems} of ${items.length} results.`;
+      container.appendChild(more);
+    }
+  }
+
+  function comparePayloads() {
+    const parsedA = parseJsonForCompare(compareInputA.value, 'A');
+    const parsedB = parseJsonForCompare(compareInputB.value, 'B');
+
+    onlyAList.innerHTML = '';
+    onlyBList.innerHTML = '';
+    diffValuesList.innerHTML = '';
+
+    if (!parsedA.ok) {
+      setStatus(compareStatus, parsedA.message, 'bad');
+      return;
+    }
+
+    if (!parsedB.ok) {
+      setStatus(compareStatus, parsedB.message, 'bad');
+      return;
+    }
+
+    const flatA = flattenPayload(parsedA.data);
+    const flatB = flattenPayload(parsedB.data);
+    const onlyA = [];
+    const onlyB = [];
+    const changed = [];
+
+    [...flatA.keys()].sort().forEach(path => {
+      if (!flatB.has(path)) {
+        onlyA.push({ path, value: flatA.get(path) });
+        return;
+      }
+
+      const valueA = flatA.get(path);
+      const valueB = flatB.get(path);
+
+      if (stableStringify(valueA) !== stableStringify(valueB)) {
+        changed.push({ path, valueA, valueB });
+      }
+    });
+
+    [...flatB.keys()].sort().forEach(path => {
+      if (!flatA.has(path)) {
+        onlyB.push({ path, value: flatB.get(path) });
+      }
+    });
+
+    renderCompareList(onlyAList, onlyA, 'No keys only in Payload A.', 'ok');
+    renderCompareList(onlyBList, onlyB, 'No keys only in Payload B.', 'bad');
+    renderCompareList(diffValuesList, changed, 'No shared keys with different values.', 'warn');
+
+    const total = onlyA.length + onlyB.length + changed.length;
+
+    setStatus(
+      compareStatus,
+      total
+        ? `Compare complete: ${onlyA.length} only in A, ${onlyB.length} only in B, ${changed.length} changed.`
+        : 'Compare complete: payloads match on flattened values.',
+      total ? 'warn' : 'good'
+    );
+  }
+
+  function showCompareMode() {
+    mainView.classList.add('hidden');
+    compareView.classList.remove('hidden');
+    compareModeBtn.setAttribute('aria-pressed', 'true');
+    compareInputA.focus();
+  }
+
+  function showMainMode() {
+    compareView.classList.add('hidden');
+    mainView.classList.remove('hidden');
+    compareModeBtn.setAttribute('aria-pressed', 'false');
+    compareModeBtn.focus();
+  }
+
+  function openHelpModal() {
+    if (!helpModal) return;
+
+    lastFocusedBeforeHelp = document.activeElement;
+    helpModal.classList.remove('hidden');
+    helpModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    setTimeout(() => {
+      closeHelpBtn?.focus();
+    }, 0);
+  }
+
+  function closeHelpModal() {
+    if (!helpModal) return;
+
+    helpModal.classList.add('hidden');
+    helpModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+
+    if (lastFocusedBeforeHelp && typeof lastFocusedBeforeHelp.focus === 'function') {
+      lastFocusedBeforeHelp.focus();
     }
   }
 
@@ -834,16 +1402,17 @@
     for (const h of hits) {
       const div = document.createElement('div');
 
-      div.className = 'hit rounded-lg px-2 py-2 text-sm transition hover:bg-sky-500/10 cursor-pointer flex items-center gap-2';
+      div.className = 'search-result hit rounded-lg px-2 py-2 text-sm transition hover:bg-sky-500/10 cursor-pointer';
       div.setAttribute('role', 'option');
       div.setAttribute('tabindex', '0');
+      div.title = `${h.pathStr} = ${h.valStr}`;
 
       const badge = h.keyHit ? 'key' : 'value';
 
       div.innerHTML = `
-        <span style="font-size:.7rem;color:var(--muted);border:1px solid rgba(148,163,184,.25);border-radius:999px;padding:0 .5rem">${badge}</span>
-        <code>${esc(h.pathStr)}</code>
-        <span style="font-size:.7rem;color:var(--muted);border:1px solid rgba(148,163,184,.25);border-radius:999px;padding:0 .5rem;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.valStr)}</span>
+        <span class="hit-badge">${badge}</span>
+        <code class="hit-path">${esc(h.pathStr)}</code>
+        <span class="hit-value">${esc(h.valStr)}</span>
       `;
 
       const choose = () => {
@@ -865,7 +1434,7 @@
         } else {
           tagEl.textContent = buildTag(h.pathTokens);
           previewEl.textContent = summarize(h.sample);
-          out.style.display = 'grid';
+          setOutputVisible(true);
         }
       };
 
@@ -934,4 +1503,43 @@
       tryParse();
     }
   });
+
+  fieldCheckBtn.addEventListener('click', runFieldCheck);
+
+  fieldCheckInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      runFieldCheck();
+    }
+  });
+
+  validateTagsBtn.addEventListener('click', validateTags);
+
+  tagValidatorInput.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      validateTags();
+    }
+  });
+
+  helpBtn?.addEventListener('click', openHelpModal);
+  closeHelpBtn?.addEventListener('click', closeHelpModal);
+
+  helpModal?.addEventListener('click', e => {
+    if (e.target === helpModal || e.target?.dataset?.helpClose === 'true') {
+      closeHelpModal();
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && helpModal && !helpModal.classList.contains('hidden')) {
+      closeHelpModal();
+    }
+  });
+
+  compareModeBtn.addEventListener('click', showCompareMode);
+  backToMainBtn.addEventListener('click', showMainMode);
+  compareBtn.addEventListener('click', comparePayloads);
+
+  updateParsedDependentControls();
 })();
