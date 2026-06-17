@@ -20,6 +20,10 @@
   const closeHelpBtn = document.getElementById('closeHelpBtn');
   const payloadStatusPill = document.getElementById('payloadStatusPill');
 
+  const samplePayloadSelect = document.getElementById('samplePayloadSelect');
+  const loadSampleBtn = document.getElementById('loadSampleBtn');
+  const samplePayloadInfo = document.getElementById('samplePayloadInfo');
+
   const fieldCheckInput = document.getElementById('fieldCheckInput');
   const fieldCheckBtn = document.getElementById('fieldCheckBtn');
   const fieldCheckResult = document.getElementById('fieldCheckResult');
@@ -52,6 +56,490 @@
   const isScalar = v => v === null || typeof v !== 'object';
   const isValidIdent = k => /^[A-Za-z_][A-Za-z0-9_]*$/.test(k);
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const samplePayloads = [
+      {
+          "id": "shopify-paid-order",
+          "label": "Shopify - Paid order",
+          "description": "Use this to practice order, customer, discount, shipping, product, and order status URL paths.",
+          "searchTerms": [
+              "order_number",
+              "email",
+              "line_items",
+              "order_status_url"
+          ],
+          "usefulPaths": [
+              "raw.order_number",
+              "raw.customer.email",
+              "raw.line_items[0].title",
+              "raw.line_items[0].product.product_url",
+              "raw.order_status_url"
+          ],
+          "payload": {
+              "raw": {
+                  "id": 7001002003001,
+                  "name": "#1024",
+                  "order_number": 1024,
+                  "confirmation_number": "SAMPLE1024",
+                  "created_at": "2026-06-17T14:13:19Z",
+                  "processed_at": "2026-06-17T14:13:18Z",
+                  "currency": "USD",
+                  "financial_status": "paid",
+                  "fulfillment_status": null,
+                  "current_subtotal_price": "89.90",
+                  "current_total_discounts": "39.95",
+                  "current_total_tax": "0.00",
+                  "current_total_price": "89.90",
+                  "order_status_url": "https://example-store.myshopify.com/orders/sample-1024/authenticate?key=sample",
+                  "contact_email": "jane.customer@example.com",
+                  "customer": {
+                      "id": 9001002001,
+                      "email": "jane.customer@example.com",
+                      "first_name": "Jane",
+                      "last_name": "Customer",
+                      "verified_email": true,
+                      "default_address": {
+                          "city": "Austin",
+                          "province_code": "TX",
+                          "country_code": "US",
+                          "zip": "78701"
+                      }
+                  },
+                  "billing_address": {
+                      "first_name": "Jane",
+                      "last_name": "Customer",
+                      "address1": "123 Sample Street",
+                      "city": "Austin",
+                      "province_code": "TX",
+                      "country_code": "US",
+                      "zip": "78701"
+                  },
+                  "shipping_address": {
+                      "first_name": "Jane",
+                      "last_name": "Customer",
+                      "address1": "123 Sample Street",
+                      "city": "Austin",
+                      "province_code": "TX",
+                      "country_code": "US",
+                      "zip": "78701"
+                  },
+                  "discount_applications": [
+                      {
+                          "title": "BUY 2 GET 1 FREE",
+                          "type": "automatic",
+                          "value": "100.0",
+                          "value_type": "percentage"
+                      }
+                  ],
+                  "line_items": [
+                      {
+                          "id": 15856130981982,
+                          "title": "Sunset Waves Punch Needle Kit",
+                          "name": "Sunset Waves Punch Needle Kit",
+                          "sku": "PN010-30x30",
+                          "quantity": 1,
+                          "price": "39.95",
+                          "vendor": "Sample Brand",
+                          "product_id": 7496050212958,
+                          "variant_id": 42180052090974,
+                          "variant_title": null,
+                          "product": {
+                              "id": "7496050212958",
+                              "product_url": "https://example-store.myshopify.com/products/sunset-waves-punch-needle",
+                              "product_image_urls": [
+                                  "https://cdn.example.com/products/sunset-waves.jpg"
+                              ],
+                              "collections": [
+                                  {
+                                      "id": "292557881438",
+                                      "title": "Punch Needle Kits"
+                                  },
+                                  {
+                                      "id": "293063917662",
+                                      "title": "New Arrivals"
+                                  }
+                              ],
+                              "tags": [
+                                  "beginner craft",
+                                  "coastal art",
+                                  "punch needle"
+                              ]
+                          },
+                          "properties": []
+                      },
+                      {
+                          "id": 15856131014750,
+                          "title": "Custom Pet Punch Needle Kit",
+                          "name": "Custom Pet Punch Needle Kit - Small",
+                          "sku": "custom-30x30cm",
+                          "quantity": 1,
+                          "price": "49.95",
+                          "vendor": "Sample Brand",
+                          "product_id": 7629664616542,
+                          "variant_id": 42680391663710,
+                          "variant_title": "Small - 12x12",
+                          "properties": [
+                              {
+                                  "name": "Your photo",
+                                  "value": "https://uploads.example.com/customer-photo.jpg"
+                              },
+                              {
+                                  "name": "thumbnail",
+                                  "value": "https://uploads.example.com/customer-photo-thumb.jpg"
+                              }
+                          ]
+                      }
+                  ],
+                  "shipping_lines": [
+                      {
+                          "code": "Tracked and Insured Shipping",
+                          "price": "0.00",
+                          "discounted_price": "0.00"
+                      }
+                  ]
+              }
+          }
+      },
+      {
+          "id": "shopify-fulfilled-order",
+          "label": "Shopify - Fulfilled order",
+          "description": "Use this to practice fulfillment, tracking number, carrier, tracking URL, and fulfilled item paths.",
+          "searchTerms": [
+              "tracking_number",
+              "tracking_company",
+              "fulfillment",
+              "line_items"
+          ],
+          "usefulPaths": [
+              "fulfillment.name",
+              "fulfillment.tracking_company",
+              "fulfillment.tracking_number",
+              "fulfillment.tracking_url",
+              "fulfillment.line_items[0].title"
+          ],
+          "payload": {
+              "fulfillment": {
+                  "id": 5854925291677,
+                  "name": "#1024.1",
+                  "status": "success",
+                  "created_at": "2026-06-17T14:02:30Z",
+                  "updated_at": "2026-06-17T14:02:30Z",
+                  "tracking_company": "USPS",
+                  "tracking_number": "9400111202555012345678",
+                  "tracking_numbers": [
+                      "9400111202555012345678"
+                  ],
+                  "tracking_url": "https://tools.usps.com/go/TrackConfirmAction?tLabels=9400111202555012345678",
+                  "tracking_urls": [
+                      "https://tools.usps.com/go/TrackConfirmAction?tLabels=9400111202555012345678"
+                  ],
+                  "line_items": [
+                      {
+                          "id": 14702953824413,
+                          "title": "The Itch-Free Foods List",
+                          "sku": "DIGITAL-GUIDE",
+                          "quantity": 1,
+                          "fulfillment_status": "fulfilled",
+                          "requires_shipping": false
+                      }
+                  ]
+              },
+              "order": {
+                  "id": 6551151706269,
+                  "name": "#1024",
+                  "order_number": 1024,
+                  "email": "jane.customer@example.com"
+              }
+          }
+      },
+      {
+          "id": "shopify-started-checkout",
+          "label": "Shopify - Started checkout",
+          "description": "Use this to practice checkout URL, cart token, totals, customer email, and line item paths.",
+          "searchTerms": [
+              "checkout",
+              "checkout_url",
+              "cart_token",
+              "subtotal_price"
+          ],
+          "usefulPaths": [
+              "raw.checkout_id",
+              "raw.checkout_token",
+              "raw.checkout_url",
+              "raw.customer.email",
+              "raw.line_items[0].title"
+          ],
+          "payload": {
+              "raw": {
+                  "checkout_id": 31053465452701,
+                  "checkout_token": "sample-checkout-token",
+                  "checkout_url": "https://example-store.myshopify.com/checkouts/cn/sample-checkout-token",
+                  "cart_token": "sample-cart-token",
+                  "created_at": "2026-06-17T13:58:12Z",
+                  "currency": "USD",
+                  "subtotal_price": "46.20",
+                  "total_discounts": "15.00",
+                  "total_tax": "0.00",
+                  "total_price": "31.20",
+                  "customer": {
+                      "email": "jane.customer@example.com",
+                      "first_name": "Jane",
+                      "last_name": "Customer"
+                  },
+                  "line_items": [
+                      {
+                          "title": "Night Relief Balm",
+                          "quantity": 2,
+                          "price": "23.10",
+                          "variant_title": "Two pack",
+                          "product": {
+                              "handle": "night-relief-balm",
+                              "product_url": "https://example-store.myshopify.com/products/night-relief-balm",
+                              "image": "https://cdn.example.com/products/night-relief-balm.png"
+                          }
+                      }
+                  ]
+              }
+          }
+      },
+      {
+          "id": "shopify-add-to-cart",
+          "label": "Shopify - Add to cart",
+          "description": "Use this to practice product, cart, variant, quantity, image, discount, and option paths.",
+          "searchTerms": [
+              "added_item",
+              "variant",
+              "discounts",
+              "image"
+          ],
+          "usefulPaths": [
+              "added_item.title",
+              "added_item.quantity",
+              "added_item.product.product_url",
+              "added_item.options_with_values[0].value",
+              "cart.items[0].key"
+          ],
+          "payload": {
+              "added_item": {
+                  "id": 48378136952989,
+                  "key": "48378136952989:sample-key",
+                  "title": "Night Relief Balm",
+                  "product_title": "Night Relief Balm",
+                  "variant_title": "Two pack",
+                  "quantity": 2,
+                  "sku": "BALM-2PK",
+                  "price": 3900,
+                  "final_price": 3350,
+                  "line_price": 6700,
+                  "currency": "USD",
+                  "image": "https://cdn.example.com/products/night-relief-balm.png",
+                  "discounts": [
+                      {
+                          "amount": 1100,
+                          "title": "Feel More Comfortable - 2 Jars"
+                      }
+                  ],
+                  "options_with_values": [
+                      {
+                          "name": "Size",
+                          "value": "Two pack"
+                      }
+                  ],
+                  "product": {
+                      "handle": "night-relief-balm",
+                      "product_url": "https://example-store.myshopify.com/products/night-relief-balm",
+                      "collections": [
+                          {
+                              "id": "skin-care",
+                              "title": "Skin Care"
+                          }
+                      ],
+                      "tags": [
+                          "balm",
+                          "night care",
+                          "sensitive skin"
+                      ]
+                  }
+              },
+              "cart": {
+                  "token": "sample-cart-token",
+                  "total_price": 6700,
+                  "item_count": 2,
+                  "items": [
+                      {
+                          "key": "48378136952989:sample-key",
+                          "quantity": 2,
+                          "title": "Night Relief Balm"
+                      }
+                  ]
+              },
+              "city": "Chicago",
+              "country": "US",
+              "device": "mobile"
+          }
+      },
+      {
+          "id": "woocommerce-completed-order",
+          "label": "WooCommerce - Completed order",
+          "description": "Use this to practice WooCommerce-style billing, shipping, product, coupon, and order total paths.",
+          "searchTerms": [
+              "billing",
+              "line_items",
+              "coupon_lines",
+              "payment_method"
+          ],
+          "usefulPaths": [
+              "raw.id",
+              "raw.billing.email",
+              "raw.line_items[0].name",
+              "raw.coupon_lines[0].code",
+              "raw.total"
+          ],
+          "payload": {
+              "raw": {
+                  "id": 120045,
+                  "number": "120045",
+                  "status": "completed",
+                  "currency": "USD",
+                  "date_created": "2026-06-17T13:42:10",
+                  "payment_method": "stripe",
+                  "payment_method_title": "Credit card",
+                  "discount_total": "10.00",
+                  "shipping_total": "4.95",
+                  "total": "64.90",
+                  "billing": {
+                      "first_name": "Jane",
+                      "last_name": "Customer",
+                      "email": "jane.customer@example.com",
+                      "phone": "555-0100",
+                      "city": "Austin",
+                      "state": "TX",
+                      "country": "US"
+                  },
+                  "shipping": {
+                      "first_name": "Jane",
+                      "last_name": "Customer",
+                      "address_1": "123 Sample Street",
+                      "city": "Austin",
+                      "state": "TX",
+                      "country": "US"
+                  },
+                  "line_items": [
+                      {
+                          "id": 55,
+                          "name": "Flower Power Punch Needle Kit",
+                          "product_id": 7496050442334,
+                          "variation_id": 42180052320350,
+                          "quantity": 1,
+                          "sku": "PN017-30x30",
+                          "subtotal": "39.95",
+                          "total": "39.95",
+                          "image": {
+                              "src": "https://cdn.example.com/products/flower-power.jpg"
+                          }
+                      },
+                      {
+                          "id": 56,
+                          "name": "Starter Yarn Bundle",
+                          "product_id": 1001002,
+                          "quantity": 1,
+                          "sku": "YARN-BUNDLE",
+                          "subtotal": "29.95",
+                          "total": "24.95"
+                      }
+                  ],
+                  "coupon_lines": [
+                      {
+                          "id": 12,
+                          "code": "WELCOME10",
+                          "discount": "10.00"
+                      }
+                  ],
+                  "shipping_lines": [
+                      {
+                          "method_title": "Standard shipping",
+                          "total": "4.95"
+                      }
+                  ]
+              }
+          }
+      },
+      {
+          "id": "web-viewed-page",
+          "label": "Web tracking - Viewed page",
+          "description": "Use this to practice simple top-level paths without a raw wrapper, such as page, location, device, and session values.",
+          "searchTerms": [
+              "url",
+              "title",
+              "device",
+              "sessionId"
+          ],
+          "usefulPaths": [
+              "title",
+              "url",
+              "device",
+              "city",
+              "sessionId"
+          ],
+          "payload": {
+              "sessionId": "sample-session-20260617134436",
+              "title": "Checkout - Example Store",
+              "url": "https://example-store.com/checkouts/sample-checkout-token",
+              "referrer": "https://example-store.com/products/night-relief-balm",
+              "device": "mobile",
+              "os": "ios",
+              "language": "en",
+              "city": "Chicago",
+              "country": "US"
+          }
+      },
+      {
+          "id": "custom-event-education",
+          "label": "Custom event - Educational example",
+          "description": "Use this to learn how missing, empty, null, and nested custom fields behave in the field checker and tag validator.",
+          "searchTerms": [
+              "plan",
+              "trial",
+              "referral",
+              "empty_value"
+          ],
+          "usefulPaths": [
+              "raw.customer.first_name",
+              "raw.subscription.plan",
+              "raw.trial.ends_at",
+              "raw.empty_value",
+              "raw.metadata.referral_code"
+          ],
+          "payload": {
+              "event_name": "subscription_started",
+              "raw": {
+                  "customer": {
+                      "email": "jane.customer@example.com",
+                      "first_name": "Jane",
+                      "last_name": "Customer"
+                  },
+                  "subscription": {
+                      "plan": "Pro",
+                      "billing_interval": "monthly",
+                      "price": 29,
+                      "currency": "USD"
+                  },
+                  "trial": {
+                      "started_at": "2026-06-17T10:00:00Z",
+                      "ends_at": "2026-07-01T10:00:00Z"
+                  },
+                  "metadata": {
+                      "source": "API demo",
+                      "referral_code": "FRIEND20",
+                      "utm_campaign": "education-sample"
+                  },
+                  "empty_value": "",
+                  "nullable_value": null,
+                  "missing_value_note": "Try validating [[ event.raw.does_not_exist ]] to see an invalid result."
+              }
+          }
+      }
+  ];
 
   function announce(msg, isError = false) {
     if (!liveStatus) return;
@@ -87,6 +575,90 @@
   function setOutputVisible(isVisible) {
     if (out) out.style.display = isVisible ? 'grid' : 'none';
     if (emptyOutputHint) emptyOutputHint.classList.toggle('hidden', isVisible);
+  }
+
+
+  function highlightSearchText(text, query) {
+    const raw = String(text ?? '');
+    const needle = String(query || '').trim();
+
+    if (!needle) return esc(raw);
+
+    const lowerRaw = raw.toLowerCase();
+    const lowerNeedle = needle.toLowerCase();
+    let cursor = 0;
+    let html = '';
+
+    while (cursor < raw.length) {
+      const index = lowerRaw.indexOf(lowerNeedle, cursor);
+
+      if (index === -1) {
+        html += esc(raw.slice(cursor));
+        break;
+      }
+
+      html += esc(raw.slice(cursor, index));
+      html += `<mark class="hit-highlight">${esc(raw.slice(index, index + needle.length))}</mark>`;
+      cursor = index + needle.length;
+    }
+
+    return html;
+  }
+
+  function getSamplePayload(id) {
+    return samplePayloads.find(sample => sample.id === id) || null;
+  }
+
+  function renderSamplePayloadInfo(sample) {
+    if (!samplePayloadInfo) return;
+
+    if (!sample) {
+      samplePayloadInfo.textContent = 'Select a sample to see what it is useful for and which paths to try.';
+      return;
+    }
+
+    const tags = sample.usefulPaths
+      .map(path => `<span class="sample-tag">[[ event.${esc(path)} ]]</span>`)
+      .join('');
+
+    const searchTerms = sample.searchTerms
+      .map(term => `<span class="sample-search-term">${esc(term)}</span>`)
+      .join('');
+
+    samplePayloadInfo.innerHTML = `
+      <p><strong>${esc(sample.label)}</strong>: ${esc(sample.description)}</p>
+      <div class="sample-tag-list mt-2" aria-label="Suggested tags to try">${tags}</div>
+      <p class="mt-2">Try searching: ${searchTerms}</p>
+    `;
+  }
+
+  function populateSamplePayloadOptions() {
+    if (!samplePayloadSelect) return;
+
+    samplePayloads.forEach(sample => {
+      const option = document.createElement('option');
+      option.value = sample.id;
+      option.textContent = sample.label;
+      samplePayloadSelect.appendChild(option);
+    });
+
+    if (loadSampleBtn) loadSampleBtn.disabled = true;
+    renderSamplePayloadInfo(null);
+  }
+
+  function loadSelectedSamplePayload() {
+    const sample = getSamplePayload(samplePayloadSelect?.value);
+
+    if (!sample) {
+      renderSamplePayloadInfo(null);
+      return;
+    }
+
+    input.value = JSON.stringify(sample.payload, null, 2);
+    searchBox.value = '';
+    tryParse({ auto: true, sampleName: sample.label });
+    renderSamplePayloadInfo(sample);
+    input.focus();
   }
 
   async function copyToClipboard(text) {
@@ -1004,7 +1576,7 @@
     updateParsedDependentControls();
   }
 
-  function tryParse({ auto = false } = {}) {
+  function tryParse({ auto = false, sampleName = '' } = {}) {
     const txt = input.value;
 
     if (!txt.trim()) {
@@ -1033,7 +1605,7 @@
       setOutputVisible(false);
       resultsEl.innerHTML = '';
 
-      announce(auto ? 'Valid JSON pasted and parsed ✓' : 'JSON parsed ✓');
+      announce(sampleName ? `Loaded sample: ${sampleName} ✓` : auto ? 'Valid JSON pasted and parsed ✓' : 'JSON parsed ✓');
 
       const first = treeEl.querySelector('.node');
       if (first) first.focus();
@@ -1382,7 +1954,8 @@
   });
 
   searchBox.addEventListener('input', () => {
-    const q = searchBox.value.trim().toLowerCase();
+    const rawQuery = searchBox.value.trim();
+    const q = rawQuery.toLowerCase();
 
     resultsEl.innerHTML = '';
 
@@ -1395,7 +1968,7 @@
       const valStr = p.sample === null ? 'null' : String(p.sample);
       const valHit = valStr.toLowerCase().includes(q);
 
-      if (keyHit || valHit) hits.push({ ...p, keyHit, valStr });
+      if (keyHit || valHit) hits.push({ ...p, keyHit, valHit, valStr });
       if (hits.length >= 100) break;
     }
 
@@ -1407,12 +1980,12 @@
       div.setAttribute('tabindex', '0');
       div.title = `${h.pathStr} = ${h.valStr}`;
 
-      const badge = h.keyHit ? 'key' : 'value';
+      const badge = h.keyHit && h.valHit ? 'key + value' : h.keyHit ? 'key' : 'value';
 
       div.innerHTML = `
         <span class="hit-badge">${badge}</span>
-        <code class="hit-path">${esc(h.pathStr)}</code>
-        <span class="hit-value">${esc(h.valStr)}</span>
+        <code class="hit-path">${highlightSearchText(h.pathStr, rawQuery)}</code>
+        <span class="hit-value">${highlightSearchText(h.valStr, rawQuery)}</span>
       `;
 
       const choose = () => {
@@ -1467,9 +2040,24 @@
 
   parseBtn.addEventListener('click', () => tryParse());
 
+
+  samplePayloadSelect?.addEventListener('change', () => {
+    const sample = getSamplePayload(samplePayloadSelect.value);
+
+    if (loadSampleBtn) loadSampleBtn.disabled = !sample;
+    renderSamplePayloadInfo(sample);
+  });
+
+  loadSampleBtn?.addEventListener('click', loadSelectedSamplePayload);
+
   clearBtn.addEventListener('click', () => {
     input.value = '';
     searchBox.value = '';
+
+    if (samplePayloadSelect) samplePayloadSelect.value = '';
+    if (loadSampleBtn) loadSampleBtn.disabled = true;
+    renderSamplePayloadInfo(null);
+
     clearOutput();
     announce('Cleared');
   });
@@ -1541,5 +2129,6 @@
   backToMainBtn.addEventListener('click', showMainMode);
   compareBtn.addEventListener('click', comparePayloads);
 
+  populateSamplePayloadOptions();
   updateParsedDependentControls();
 })();
