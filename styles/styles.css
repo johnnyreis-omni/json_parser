@@ -306,39 +306,101 @@
     overflow-x: hidden;
   }
 
-  .search-result {
-    display: grid !important;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    gap: .35rem .6rem;
+ .search-result {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: .35rem .6rem;
+}
+
+.search-result .hit-badge {
+  align-self: start;
+  margin-top: .08rem;
+  font-size: .7rem;
+  color: var(--muted);
+  border: 1px solid rgba(148,163,184,.25);
+  border-radius: 999px;
+  padding: 0 .5rem;
+  white-space: nowrap;
+}
+
+.search-result .hit-path {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.search-result .hit-value {
+  display: inline-block;
+  grid-column: 2;
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.25;
+  font-size: .72rem;
+  color: var(--muted);
+  border: 1px solid rgba(148,163,184,.25);
+  border-radius: .65rem;
+  padding: .05rem .5rem;
+}
+
+  .hit-highlight {
+    border-radius: .25rem;
+    padding: 0 .08rem;
+    background: rgba(250,204,21,.38);
+    color: inherit;
+    font-weight: 800;
   }
 
-  .search-result .hit-badge {
-    font-size: .7rem;
-    color: var(--muted);
-    border: 1px solid rgba(148,163,184,.25);
-    border-radius: 999px;
-    padding: 0 .5rem;
-    white-space: nowrap;
+  .dark .hit-highlight {
+    background: rgba(250,204,21,.24);
   }
 
-  .search-result .hit-path {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .sample-info {
+    line-height: 1.5;
   }
 
-  .search-result .hit-value {
-    grid-column: 2;
-    min-width: 0;
+  .sample-info strong {
+    color: rgb(15 23 42);
+  }
+
+  .dark .sample-info strong {
+    color: rgb(230 237 243);
+  }
+
+  .sample-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+  }
+
+  .sample-tag,
+  .sample-search-term {
+    display: inline-flex;
     max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: .72rem;
-    color: var(--muted);
-    border: 1px solid rgba(148,163,184,.25);
+    align-items: center;
     border-radius: 999px;
-    padding: 0 .5rem;
+    border: 1px solid rgba(148,163,184,.30);
+    background: rgba(148,163,184,.10);
+    padding: .12rem .5rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: .72rem;
+    overflow-wrap: anywhere;
+  }
+
+  .sample-count {
+    border: 1px solid rgba(148,163,184,.30);
+    border-radius: 999px;
+    padding: .15rem .55rem;
+    background: rgba(148,163,184,.10);
   }
